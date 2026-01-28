@@ -1,2 +1,10 @@
-// See the Electron documentation for details on how to use preload scripts:
-// https://www.electronjs.org/docs/latest/tutorial/process-model#preload-scripts
+import { contextBridge, ipcRenderer } from 'electron';
+
+// Custom APIs for renderer
+const electronAPI = {
+  testRemoteMCP: () => ipcRenderer.invoke('test-remote-mcp'),
+  testLocalMCP: () => ipcRenderer.invoke('test-local-mcp'),
+  generateWithMCP: (prompt: string) => ipcRenderer.invoke('generate-with-mcp', prompt)
+};
+
+contextBridge.exposeInMainWorld('electronAPI', electronAPI);
