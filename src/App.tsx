@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { Button } from "./components/ui/button";
+import { McpMentionInput } from "./components/blocks/mcp-mention-input";
 
 const App = () => {
   const [loading, setLoading] = useState(false);
@@ -53,6 +54,8 @@ const App = () => {
       <h1 className="text-2xl font-bold mb-6">AI Agent with MCP Tools</h1>
 
       <div className="space-y-6">
+        <McpMentionInput />
+        
         <div className="space-y-4">
           <div>
             <label className="block text-sm font-medium mb-2">Prompt:</label>
