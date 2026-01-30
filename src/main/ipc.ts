@@ -55,12 +55,14 @@ ipcMain.on("ai-compose", async (event, prompt: string) => {
     const result = await agent?.generate({
       prompt,
       onStepFinish: (step) => {
-        console.log(`Step ${step.text}:`, step);
-        event.reply("ai-step", step);
+        // Extract text from step content for UI
+        const textContent = step.content?.find((c) => c.type === "text");
+        const stepWithText = { ...step, text: textContent?.text || step.text };
+
+        event.reply("ai-step", stepWithText);
       },
     });
 
-    console.log("AI Response:", result);
     event.reply("ai-complete", result);
   } catch (error) {
     console.error("AI Error:", error);

@@ -1,17 +1,21 @@
-import type { StepResult } from "ai";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Compose } from "@/renderer/components/blocks/compose";
+import { ComposerResult } from "@/renderer/components/blocks/composer-result";
+import { ComposerToolCalling } from "@/renderer/components/blocks/composer-tool-calling";
 import { Settings } from "@/renderer/components/blocks/settings";
 import { Kbd, KbdGroup } from "@/renderer/components/ui/kbd";
 
 const Welcome = () => {
+  const [steps, setSteps] = useState([]);
+  const [result, setResult] = useState(null);
+
   useEffect(() => {
     const stepHandler = (step) => {
-      console.log(`Step ${step.text}:`, step);
+      setSteps((prev) => [...prev, step]);
     };
 
     const completeHandler = (result) => {
-      console.log("AI Complete:", result);
+      setResult(result._output || result.text || result);
     };
 
     const errorHandler = (error) => {
@@ -21,33 +25,45 @@ const Welcome = () => {
     window.electronAPI.onAIStep(stepHandler);
     window.electronAPI.onAIComplete(completeHandler);
     window.electronAPI.onAIError(errorHandler);
-
-    // Cleanup function would go here if the preload exposed removeListener methods
   }, []);
 
   const handleAIResponse = async (prompt: string) => {
-    console.log("Sending prompt:", prompt);
+    setSteps([]);
+    setResult(null);
     window.electronAPI.aiCompose(prompt);
   };
 
   return (
     <>
-      <div className="h-full flex flex-col items-center justify-center">
-        <p className="text-3xl font-extralight">Good morning, Alex</p>
-        <div className="flex flex-col gap-2 text-xs absolute bottom-10">
-          <KbdGroup>
-            <span className="text-muted-foreground">Compose</span>
-            <Kbd>⌘</Kbd>
-            <Kbd>N</Kbd>
-          </KbdGroup>
-          <KbdGroup>
-            <span className="text-muted-foreground">Setting</span>
-            <Kbd>⌘</Kbd>
-            <Kbd>K</Kbd>
-          </KbdGroup>
+      {steps.length > 0 && !result && <ComposerToolCalling steps={steps} />}
+
+      {result && (
+        <div className="mt-4">
+          <ComposerResult result={result} />
         </div>
-      </div>
-      <Settings />
+      )}
+
+      {steps.length === 0 && !result && (
+        <>
+          <div className="h-full flex flex-col items-center justify-center">
+            <p className="text-3xl font-extralight">Good morning, Alex</p>
+            <div className="flex flex-col gap-2 text-xs absolute bottom-10">
+              <KbdGroup>
+                <span className="text-muted-foreground">Compose</span>
+                <Kbd>⌘</Kbd>
+                <Kbd>N</Kbd>
+              </KbdGroup>
+              <KbdGroup>
+                <span className="text-muted-foreground">Setting</span>
+                <Kbd>⌘</Kbd>
+                <Kbd>K</Kbd>
+              </KbdGroup>
+            </div>
+          </div>
+          <Settings />
+        </>
+      )}
+
       <Compose onSubmit={handleAIResponse} />
     </>
   );
