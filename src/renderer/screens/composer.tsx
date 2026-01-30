@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Sparkle } from "lucide-react";
 import { Compose } from "@/renderer/components/blocks/compose";
 import { ComposerResult } from "@/renderer/components/blocks/composer-result";
 import { ComposerToolCalling } from "@/renderer/components/blocks/composer-tool-calling";
@@ -8,6 +9,7 @@ import { Kbd, KbdGroup } from "@/renderer/components/ui/kbd";
 const Welcome = () => {
   const [steps, setSteps] = useState([]);
   const [result, setResult] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     const stepHandler = (step) => {
@@ -16,6 +18,7 @@ const Welcome = () => {
 
     const completeHandler = (result) => {
       setResult(result._output || result.text || result);
+      setIsLoading(false);
     };
 
     const errorHandler = (error) => {
@@ -30,20 +33,29 @@ const Welcome = () => {
   const handleAIResponse = async (prompt: string) => {
     setSteps([]);
     setResult(null);
+    setIsLoading(true);
     window.electronAPI.aiCompose(prompt);
   };
 
   return (
     <>
-      {steps.length > 0 && !result && <ComposerToolCalling steps={steps} />}
-
-      {result && (
-        <div className="mt-4">
-          <ComposerResult result={result} />
+      {isLoading && steps.length === 0 && (
+        <div className="flex flex-col items-center justify-center h-screen">
+          <Sparkle className="w-8 h-8 animate-pulse" />
         </div>
       )}
 
-      {steps.length === 0 && !result && (
+      {steps.length > 0 && !result && <ComposerToolCalling steps={steps} />}
+
+      {result && (
+        <div className="flex flex-col items-center justify-center h-screen p-8">
+          <div className="max-w-2xl w-full">
+            <ComposerResult result={result} />
+          </div>
+        </div>
+      )}
+
+      {steps.length === 0 && !result && !isLoading && (
         <>
           <div className="h-full flex flex-col items-center justify-center">
             <p className="text-3xl font-extralight">Good morning, Alex</p>
