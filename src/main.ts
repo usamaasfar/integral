@@ -11,10 +11,10 @@ if (started) {
 // Set as default protocol client for OAuth callbacks
 if (process.defaultApp) {
   if (process.argv.length >= 2) {
-    app.setAsDefaultProtocolClient('myapp', process.execPath, [path.resolve(process.argv[1])]);
+    app.setAsDefaultProtocolClient("integral.computer", process.execPath, [path.resolve(process.argv[1])]);
   }
 } else {
-  app.setAsDefaultProtocolClient('myapp');
+  app.setAsDefaultProtocolClient("integral.computer");
 }
 
 let mainWindow: BrowserWindow | null = null;
@@ -24,6 +24,7 @@ const createWindow = () => {
   mainWindow = new BrowserWindow({
     width: 800,
     height: 600,
+    titleBarStyle: "hidden",
     webPreferences: {
       preload: path.join(__dirname, "preload.js"),
     },
@@ -41,18 +42,18 @@ const createWindow = () => {
 };
 
 // Handle OAuth callback protocol
-app.on('open-url', (event, url) => {
+app.on("open-url", (event, url) => {
   event.preventDefault();
-  console.log('OAuth callback received:', url);
-  
-  if (url.startsWith('myapp://oauth/callback')) {
+  console.log("OAuth callback received:", url);
+
+  if (url.startsWith("integral.computer://oauth/callback")) {
     const urlObj = new URL(url);
-    const code = urlObj.searchParams.get('code');
-    
+    const code = urlObj.searchParams.get("code");
+
     if (code && mainWindow) {
       // Send the auth code to the renderer process
-      mainWindow.webContents.send('oauth-callback', code);
-      
+      mainWindow.webContents.send("oauth-callback", code);
+
       // Focus the app window
       if (mainWindow.isMinimized()) mainWindow.restore();
       mainWindow.focus();
