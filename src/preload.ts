@@ -5,9 +5,17 @@ const electronAPI = {
   // Storage
   setStorage: (key: string, value: any) => ipcRenderer.invoke("set-storage", key, value),
   getStorage: (key: string, defaultValue?: any) => ipcRenderer.invoke("get-storage", key, defaultValue),
+  // Secure Storage
+  setSecureStorage: (key: string, value: string) => ipcRenderer.invoke("set-secure-storage", key, value),
+  getSecureStorage: (key: string, defaultValue?: string) => ipcRenderer.invoke("get-secure-storage", key, defaultValue),
   // Settings
   getSettings: () => ipcRenderer.invoke("get-settings"),
   saveSettings: (settings: any) => ipcRenderer.invoke("save-settings", settings),
+  // Provider Settings
+  getProviderSettings: () => ipcRenderer.invoke("get-provider-settings"),
+  saveProviderSettings: (settings: any) => ipcRenderer.invoke("save-provider-settings", settings),
+  getProviderApiKey: (provider: string) => ipcRenderer.invoke("get-provider-api-key", provider),
+  getOllamaModels: () => ipcRenderer.invoke("get-ollama-models"),
   // AI Composer
   aiCompose: (prompt: string) => ipcRenderer.send("ai-compose", prompt),
   onAIStep: (callback: (step: any) => void) => {

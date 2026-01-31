@@ -10,6 +10,7 @@ import { Input } from "@/renderer/components/ui/input";
 import { Label } from "@/renderer/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/renderer/components/ui/tabs";
 import { Textarea } from "@/renderer/components/ui/textarea";
+import { Providers } from "./settings-providers";
 
 export const Settings = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -39,15 +40,7 @@ export const Settings = () => {
             <General />
           </TabsContent>
           <TabsContent value="providers">
-            <Card>
-              <CardHeader>
-                <CardTitle>Analytics</CardTitle>
-                <CardDescription>
-                  Track performance and user engagement metrics. Monitor trends and identify growth opportunities.
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="text-muted-foreground text-sm">Page views are up 25% compared to last month.</CardContent>
-            </Card>
+            <Providers />
           </TabsContent>
           <TabsContent value="servers">
             <Card>
@@ -88,7 +81,6 @@ const General = () => {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>General Settings</CardTitle>
         <CardDescription>Configure how the AI should interact with you</CardDescription>
       </CardHeader>
       <CardContent>

@@ -2,9 +2,17 @@ export interface ElectronAPI {
   // Storage
   setStorage: (key: string, value: any) => Promise<{ success: boolean }>;
   getStorage: (key: string, defaultValue?: any) => Promise<any>;
+  // Secure Storage
+  setSecureStorage: (key: string, value: string) => Promise<{ success: boolean }>;
+  getSecureStorage: (key: string, defaultValue?: string) => Promise<string>;
   // Settings
   getSettings: () => Promise<{ username: string; customInstructions: string }>;
   saveSettings: (settings: any) => Promise<{ success: boolean }>;
+  // Provider Settings
+  getProviderSettings: () => Promise<{ selectedProvider: string; modelName: string; name: string; baseUrl: string }>;
+  saveProviderSettings: (settings: any) => Promise<{ success: boolean }>;
+  getProviderApiKey: (provider: string) => Promise<string>;
+  getOllamaModels: () => Promise<string[]>;
   // AI Composer
   aiCompose: (prompt: string) => void;
   onAIStep: (callback: (step: any) => void) => void;
