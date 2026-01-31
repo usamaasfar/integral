@@ -2,10 +2,11 @@ import { useDirection } from "@radix-ui/react-direction";
 import { Slot } from "@radix-ui/react-slot";
 import { cva } from "class-variance-authority";
 import * as React from "react";
-import { useIsomorphicLayoutEffect } from "@/renderer/hooks/use-isomorphic-layout-effect";
-import { useLazyRef } from "@/renderer/hooks/use-lazy-ref";
-import { useComposedRefs } from "@/renderer/lib/compose-refs";
-import { cn } from "@/renderer/lib/utils";
+
+import { useIsomorphicLayoutEffect } from "~/renderer/hooks/use-isomorphic-layout-effect";
+import { useLazyRef } from "~/renderer/hooks/use-lazy-ref";
+import { useComposedRefs } from "~/renderer/lib/compose-refs";
+import { cn } from "~/renderer/lib/utils";
 
 type Direction = "ltr" | "rtl";
 type Orientation = "vertical" | "horizontal";

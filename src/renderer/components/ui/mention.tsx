@@ -1,12 +1,9 @@
 import * as MentionPrimitive from "@diceui/mention";
 import type * as React from "react";
 
-import { cn } from "@/renderer/lib/utils";
+import { cn } from "~/renderer/lib/utils";
 
-function Mention({
-  className,
-  ...props
-}: React.ComponentProps<typeof MentionPrimitive.Root>) {
+function Mention({ className, ...props }: React.ComponentProps<typeof MentionPrimitive.Root>) {
   return (
     <MentionPrimitive.Root
       data-slot="mention"
@@ -19,23 +16,11 @@ function Mention({
   );
 }
 
-function MentionLabel({
-  className,
-  ...props
-}: React.ComponentProps<typeof MentionPrimitive.Label>) {
-  return (
-    <MentionPrimitive.Label
-      data-slot="mention-label"
-      className={cn("px-0.5 py-1.5 font-semibold text-sm", className)}
-      {...props}
-    />
-  );
+function MentionLabel({ className, ...props }: React.ComponentProps<typeof MentionPrimitive.Label>) {
+  return <MentionPrimitive.Label data-slot="mention-label" className={cn("px-0.5 py-1.5 font-semibold text-sm", className)} {...props} />;
 }
 
-function MentionInput({
-  className,
-  ...props
-}: React.ComponentProps<typeof MentionPrimitive.Input>) {
+function MentionInput({ className, ...props }: React.ComponentProps<typeof MentionPrimitive.Input>) {
   return (
     <MentionPrimitive.Input
       data-slot="mention-input"
@@ -48,11 +33,7 @@ function MentionInput({
   );
 }
 
-function MentionContent({
-  className,
-  children,
-  ...props
-}: React.ComponentProps<typeof MentionPrimitive.Content>) {
+function MentionContent({ className, children, ...props }: React.ComponentProps<typeof MentionPrimitive.Content>) {
   return (
     <MentionPrimitive.Portal>
       <MentionPrimitive.Content
@@ -69,11 +50,7 @@ function MentionContent({
   );
 }
 
-function MentionItem({
-  className,
-  children,
-  ...props
-}: React.ComponentProps<typeof MentionPrimitive.Item>) {
+function MentionItem({ className, children, ...props }: React.ComponentProps<typeof MentionPrimitive.Item>) {
   return (
     <MentionPrimitive.Item
       data-slot="mention-item"

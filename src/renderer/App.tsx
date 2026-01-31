@@ -1,4 +1,4 @@
-import ComposerScreen from "@/renderer/screens/composer";
+import ComposerScreen from "~/renderer/screens/composer";
 
 const App = () => {
   return (

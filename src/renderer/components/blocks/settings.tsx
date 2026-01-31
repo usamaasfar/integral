@@ -2,15 +2,16 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useEffect, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import * as z from "zod";
-import { Button } from "@/renderer/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/renderer/components/ui/card";
-import { Dialog, DialogContent } from "@/renderer/components/ui/dialog";
-import { Field, FieldError } from "@/renderer/components/ui/field";
-import { Input } from "@/renderer/components/ui/input";
-import { Label } from "@/renderer/components/ui/label";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/renderer/components/ui/tabs";
-import { Textarea } from "@/renderer/components/ui/textarea";
-import { Providers } from "./settings-providers";
+
+import { Providers } from "~/renderer/components/blocks/settings-providers";
+import { Button } from "~/renderer/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "~/renderer/components/ui/card";
+import { Dialog, DialogContent } from "~/renderer/components/ui/dialog";
+import { Field, FieldError } from "~/renderer/components/ui/field";
+import { Input } from "~/renderer/components/ui/input";
+import { Label } from "~/renderer/components/ui/label";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "~/renderer/components/ui/tabs";
+import { Textarea } from "~/renderer/components/ui/textarea";
 
 export const Settings = () => {
   const [isOpen, setIsOpen] = useState(false);

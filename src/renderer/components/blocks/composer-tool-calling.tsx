@@ -6,7 +6,7 @@ import {
   TimelineHeader,
   TimelineItem,
   TimelineTitle,
-} from "@/renderer/components/ui/timeline";
+} from "~/renderer/components/ui/timeline";
 
 export const ComposerToolCalling = ({ steps }) => {
   const messages = [];

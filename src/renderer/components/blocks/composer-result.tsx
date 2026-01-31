@@ -1,7 +1,7 @@
 import ReactMarkdown from "react-markdown";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import { oneDark } from "react-syntax-highlighter/dist/esm/styles/prism";
-import { ScrollArea } from "@/renderer/components/ui/scroll-area";
+import { ScrollArea } from "~/renderer/components/ui/scroll-area";
 
 export const ComposerResult = ({ result }) => {
   return (

@@ -2,13 +2,14 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import React, { useEffect } from "react";
 import { Controller, useForm } from "react-hook-form";
 import * as z from "zod";
-import { Avatar, AvatarFallback } from "@/renderer/components/ui/avatar";
-import { Button } from "@/renderer/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader } from "@/renderer/components/ui/card";
-import { Field, FieldError } from "@/renderer/components/ui/field";
-import { Input } from "@/renderer/components/ui/input";
-import { Label } from "@/renderer/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/renderer/components/ui/select";
+
+import { Avatar, AvatarFallback } from "~/renderer/components/ui/avatar";
+import { Button } from "~/renderer/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader } from "~/renderer/components/ui/card";
+import { Field, FieldError } from "~/renderer/components/ui/field";
+import { Input } from "~/renderer/components/ui/input";
+import { Label } from "~/renderer/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "~/renderer/components/ui/select";
 
 export type ProviderType = "openai" | "anthropic" | "groq" | "cerebras" | "google" | "ollama" | "openrouter" | "openai-compatible";
 

@@ -1,10 +1,10 @@
 import { Sparkle } from "lucide-react";
 import { useEffect, useState } from "react";
-import { Compose } from "@/renderer/components/blocks/compose";
-import { ComposerResult } from "@/renderer/components/blocks/composer-result";
-import { ComposerToolCalling } from "@/renderer/components/blocks/composer-tool-calling";
-import { Settings } from "@/renderer/components/blocks/settings";
-import { Kbd, KbdGroup } from "@/renderer/components/ui/kbd";
+import { Compose } from "~/renderer/components/blocks/compose";
+import { ComposerResult } from "~/renderer/components/blocks/composer-result";
+import { ComposerToolCalling } from "~/renderer/components/blocks/composer-tool-calling";
+import { Settings } from "~/renderer/components/blocks/settings";
+import { Kbd, KbdGroup } from "~/renderer/components/ui/kbd";
 
 const Welcome = () => {
   const [steps, setSteps] = useState([]);

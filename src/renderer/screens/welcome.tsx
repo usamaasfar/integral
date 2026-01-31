@@ -1,4 +1,4 @@
-import { Button } from "@/renderer/components/ui/button";
+import { Button } from "~/renderer/components/ui/button";
 
 const Welcome = () => {
   return (
@@ -7,9 +7,8 @@ const Welcome = () => {
         <div className="text-center flex flex-col gap-4">
           <p className="text-4xl font-bold">Integral</p>
           <p className="">
-            Commodo aliqua exercitation proident officia est nulla duis Lorem
-            pariatur ipsum. Commodo aliqua exercitation proident officia est
-            nulla duis Lorem pariatur ipsum.
+            Commodo aliqua exercitation proident officia est nulla duis Lorem pariatur ipsum. Commodo aliqua exercitation proident officia
+            est nulla duis Lorem pariatur ipsum.
           </p>
         </div>
 

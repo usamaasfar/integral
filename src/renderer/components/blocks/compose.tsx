@@ -1,10 +1,10 @@
 import * as Mention from "@diceui/mention";
 import { useEffect, useState } from "react";
 
-import { Avatar, AvatarFallback, AvatarGroup, AvatarImage } from "@/renderer/components/ui/avatar";
-import { Dialog, DialogContent } from "@/renderer/components/ui/dialog";
-import { Kbd, KbdGroup } from "@/renderer/components/ui/kbd";
-import { Textarea } from "@/renderer/components/ui/textarea";
+import { Avatar, AvatarFallback, AvatarGroup, AvatarImage } from "~/renderer/components/ui/avatar";
+import { Dialog, DialogContent } from "~/renderer/components/ui/dialog";
+import { Kbd, KbdGroup } from "~/renderer/components/ui/kbd";
+import { Textarea } from "~/renderer/components/ui/textarea";
 
 const mcps = [
   {
