@@ -6,4 +6,17 @@ import { defineConfig } from "vite";
 export default defineConfig({
   plugins: [react(), tailwindcss()],
   resolve: { alias: { "~": path.resolve(__dirname, "./src") } },
+  optimizeDeps: {
+    exclude: ["react-syntax-highlighter"]
+  },
+  build: {
+    rollupOptions: {
+      external: [
+        /^refractor\/.*/,
+        /^highlight\.js\/.*/,
+        "@babel/runtime/helpers/asyncToGenerator",
+        "@babel/runtime/regenerator"
+      ]
+    }
+  }
 });
