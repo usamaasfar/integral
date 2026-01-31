@@ -1,8 +1,10 @@
 import * as Mention from "@diceui/mention";
 import { useEffect, useState } from "react";
+
+import { Avatar, AvatarFallback, AvatarGroup, AvatarImage } from "@/renderer/components/ui/avatar";
+import { Dialog, DialogContent } from "@/renderer/components/ui/dialog";
 import { Kbd, KbdGroup } from "@/renderer/components/ui/kbd";
-import { Avatar, AvatarFallback, AvatarGroup, AvatarImage } from "../ui/avatar";
-import { Dialog, DialogContent } from "../ui/dialog";
+import { Textarea } from "@/renderer/components/ui/textarea";
 
 const mcps = [
   {
@@ -86,7 +88,7 @@ export function Compose({ onSubmit }: { onSubmit?: (prompt: string) => Promise<a
               className="flex min-h-[60px] w-full bg-transparent px-2 py-2 text-base placeholder:text-muted-foreground focus-visible:outline-none resize-none border-none md:text-sm"
               asChild
             >
-              <textarea />
+              <Textarea />
             </Mention.MentionInput>
             <Mention.MentionContent className="data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 relative z-[60] min-w-[var(--dice-anchor-width)] overflow-hidden rounded-md border border-zinc-200 bg-white p-1 text-zinc-950 shadow-md data-[state=closed]:animate-out data-[state=open]:animate-in dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-50">
               {mcps.map((mcp) => (

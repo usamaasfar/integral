@@ -1,6 +1,7 @@
 import { ipcMain } from "electron";
 import composer from "./ai/index";
 import { MCPManager } from "./smithery";
+import { mainSet, mainGet } from "../common/storage";
 
 const mcpManager = new MCPManager();
 
@@ -45,6 +46,34 @@ ipcMain.handle("finish-oauth", async (event, mcpName: string, authCode: string) 
   }
 
   return await mcpManager.finishOAuth(mcp.name, mcp.url, authCode);
+});
+
+// Storage handlers
+ipcMain.handle("set-storage", async (event, key: string, value: any) => {
+  mainSet(key, value);
+  return { success: true };
+});
+
+ipcMain.handle("get-storage", async (event, key: string, defaultValue?: any) => {
+  return mainGet(key, defaultValue);
+});
+
+// Settings handlers
+ipcMain.handle("get-settings", async () => {
+  return {
+    username: mainGet("username", ""),
+    customInstructions: mainGet("customInstructions", "")
+  };
+});
+
+ipcMain.handle("save-settings", async (event, settings) => {
+  if (settings.username !== undefined) {
+    mainSet("username", settings.username);
+  }
+  if (settings.customInstructions !== undefined) {
+    mainSet("customInstructions", settings.customInstructions);
+  }
+  return { success: true };
 });
 
 // AI Composer handler

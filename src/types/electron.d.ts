@@ -1,4 +1,10 @@
 export interface ElectronAPI {
+  // Storage
+  setStorage: (key: string, value: any) => Promise<{ success: boolean }>;
+  getStorage: (key: string, defaultValue?: any) => Promise<any>;
+  // Settings
+  getSettings: () => Promise<{ username: string; customInstructions: string }>;
+  saveSettings: (settings: any) => Promise<{ success: boolean }>;
   // AI Composer
   aiCompose: (prompt: string) => void;
   onAIStep: (callback: (step: any) => void) => void;

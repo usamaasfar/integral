@@ -1,13 +1,13 @@
 import { stepCountIs, type Tool, ToolLoopAgent, tool } from "ai";
 import { z } from "zod";
 
-import { composerPrompt } from "@/main/ai/prompt/composer";
+import { getComposerPrompt } from "@/main/ai/prompt/composer";
 import ollama from "@/main/ai/providers/ollama";
 
 function composer(tools: Tool[]) {
   try {
     const composer = new ToolLoopAgent({
-      instructions: composerPrompt,
+      instructions: getComposerPrompt(),
       model: ollama("kimi-k2.5:cloud"),
       stopWhen: stepCountIs(128),
       tools: {
