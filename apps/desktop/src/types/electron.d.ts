@@ -16,6 +16,12 @@ export interface ElectronAPI {
   // Ollama
   getOllamaHealth: () => Promise<boolean>;
   getOllamaModels: () => Promise<string[]>;
+  
+  // AI Composition
+  aiCompose: (prompt: string) => Promise<any>;
+  onAIStep: (callback: (step: any) => void) => void;
+  onAIComplete: (callback: (result: any) => void) => void;
+  onAIError: (callback: (error: any) => void) => void;
 }
 
 declare global {

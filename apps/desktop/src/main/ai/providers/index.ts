@@ -1,18 +1,24 @@
+import anthropicProvider from "~/main/ai/providers/anthropic";
+import googleProvider from "~/main/ai/providers/google";
+import ollamaProvider from "~/main/ai/providers/ollama";
+import openaiProvider from "~/main/ai/providers/openai";
+import openaiCompatibleProvider from "~/main/ai/providers/openai-compatible";
 import storage from "~/main/utils/storage";
 
 const providers = {
-  ollama: require("~/main/ai/providers/ollama"),
-  openai: require("~/main/ai/providers/openai"),
-  anthropic: require("~/main/ai/providers/anthropic"),
-  google: require("~/main/ai/providers/google"),
-  openaiCompatible: require("~/main/ai/providers/openai-compatible"),
+  ollama: ollamaProvider,
+  openai: openaiProvider,
+  anthropic: anthropicProvider,
+  google: googleProvider,
+  openaiCompatible: openaiCompatibleProvider,
 };
 
-export const model = (() => {
-  const model = storage.store.get("model") as {
+export const getModel = () => {
+  const selectedProvider = storage.store.get("selectedProvider", "ollama") as keyof typeof providers;
+  const providerConfig = storage.store.get(`${selectedProvider}-provider-config`) as {
     provider: keyof typeof providers;
-    name: string;
+    model: string;
   };
 
-  return providers[model.provider](model.name);
-})();
+  return providers[providerConfig.provider](providerConfig.model);
+};

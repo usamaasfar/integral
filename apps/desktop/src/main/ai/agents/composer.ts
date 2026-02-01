@@ -2,13 +2,13 @@ import { stepCountIs, type Tool, ToolLoopAgent, tool } from "ai";
 import { z } from "zod";
 
 import composerPrompt from "~/main/ai/prompt/composer";
-import { model } from "~/main/ai/providers";
+import { getModel } from "~/main/ai/providers";
 
 function composer(tools: Tool[]) {
   try {
     const composer = new ToolLoopAgent({
       instructions: composerPrompt,
-      model: model,
+      model: getModel(),
       stopWhen: stepCountIs(128),
       tools: {
         weather: tool({

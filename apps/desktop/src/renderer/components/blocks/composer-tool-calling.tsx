@@ -9,14 +9,13 @@ import {
 } from "~/renderer/components/ui/timeline";
 
 export const ComposerToolCalling = ({ steps }) => {
+  console.log("Steps received:", steps); // Debug log
+
   const messages = [];
   const seen = new Set();
 
   steps.forEach((step) => {
-    // Only show steps that have tool calls (not the final answer)
-    const hasToolCalls = step.content?.some((c) => c.type === "tool-call");
-
-    if (step.text && step.text.trim() && hasToolCalls) {
+    if (step.text && step.text.trim()) {
       const key = `text-${step.text.trim()}`;
       if (!seen.has(key)) {
         seen.add(key);

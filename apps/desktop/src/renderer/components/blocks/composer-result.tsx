@@ -1,6 +1,4 @@
 import ReactMarkdown from "react-markdown";
-import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
-import { oneDark } from "react-syntax-highlighter/dist/esm/styles/prism";
 import { ScrollArea } from "~/renderer/components/ui/scroll-area";
 
 export const ComposerResult = ({ result }) => {
@@ -12,19 +10,10 @@ export const ComposerResult = ({ result }) => {
             <ReactMarkdown
               components={{
                 code({ node, inline, className, children, ...props }) {
-                  const match = /language-(\w+)/.exec(className || "");
-                  return !inline && match ? (
-                    <div className="relative">
-                      <SyntaxHighlighter
-                        style={oneDark}
-                        language={match[1]}
-                        PreTag="div"
-                        className="rounded-lg overflow-x-auto max-h-96 overflow-y-auto text-xs"
-                        {...props}
-                      >
-                        {String(children).replace(/\n$/, "")}
-                      </SyntaxHighlighter>
-                    </div>
+                  return !inline ? (
+                    <pre className="bg-gray-800 text-gray-200 p-4 rounded-lg overflow-x-auto text-sm">
+                      <code {...props}>{children}</code>
+                    </pre>
                   ) : (
                     <code className="bg-gray-800 text-gray-200 px-1 py-0.5 rounded text-sm" {...props}>
                       {children}

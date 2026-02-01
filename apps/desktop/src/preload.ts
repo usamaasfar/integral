@@ -18,6 +18,18 @@ const electronAPI = {
   // Ollama
   getOllamaHealth: () => ipcRenderer.invoke("get-ollama-health"),
   getOllamaModels: () => ipcRenderer.invoke("get-ollama-models"),
+
+  // AI Composition
+  aiCompose: (prompt: string) => ipcRenderer.send("ai-compose", prompt),
+  onAIStep: (callback: (step: any) => void) => {
+    ipcRenderer.on("ai-step", (_event, step) => callback(step));
+  },
+  onAIComplete: (callback: (result: any) => void) => {
+    ipcRenderer.on("ai-complete", (_event, result) => callback(result));
+  },
+  onAIError: (callback: (error: any) => void) => {
+    ipcRenderer.on("ai-error", (_event, error) => callback(error));
+  },
 };
 
 contextBridge.exposeInMainWorld("electronAPI", electronAPI);

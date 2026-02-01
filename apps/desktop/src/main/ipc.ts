@@ -1,4 +1,4 @@
-import { ipcMain } from "electron";
+import { BrowserWindow, ipcMain } from "electron";
 
 import composer from "~/main/ai/agents/composer";
 import ollama from "~/main/services/ollama";
@@ -63,4 +63,27 @@ ipcMain.handle("get-ollama-health", async () => {
 
 ipcMain.handle("get-ollama-models", async () => {
   return await ollama.models();
+});
+
+// AI Composer handler
+ipcMain.on("ai-compose", async (event, prompt: string) => {
+  try {
+    const agent = composer([]);
+
+    const result = await agent?.generate({
+      prompt,
+      onStepFinish: (step) => {
+        // Extract text from step content for UI
+        const textContent = step.content?.find((c) => c.type === "text");
+        const stepWithText = { ...step, text: textContent?.text || step.text };
+
+        event.reply("ai-step", stepWithText);
+      },
+    });
+
+    event.reply("ai-complete", result);
+  } catch (error) {
+    console.error("AI Error:", error);
+    event.reply("ai-error", error.message);
+  }
 });
