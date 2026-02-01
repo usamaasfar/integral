@@ -9,6 +9,7 @@ import { Card, CardContent, CardDescription, CardHeader } from "~/renderer/compo
 import { Field, FieldError } from "~/renderer/components/ui/field";
 import { Input } from "~/renderer/components/ui/input";
 import { Label } from "~/renderer/components/ui/label";
+import { ScrollArea } from "~/renderer/components/ui/scroll-area";
 import { Textarea } from "~/renderer/components/ui/textarea";
 import { useSettingsStore } from "~/renderer/stores/settings";
 
@@ -40,10 +41,11 @@ export const SettingsGeneral = () => {
           <Loader className="h-6 w-6 animate-spin text-muted-foreground" />
         </div>
       )}
-      <CardHeader>
+      <CardHeader className="flex-shrink-0">
         <CardDescription>Configure how the AI should interact with you</CardDescription>
       </CardHeader>
-      <CardContent>
+      <ScrollArea className="flex-1 h-0">
+        <CardContent className="pb-6">
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
           <Controller
             name="username"
@@ -80,6 +82,7 @@ export const SettingsGeneral = () => {
           </Button>
         </form>
       </CardContent>
+      </ScrollArea>
     </Card>
   );
 };

@@ -23,20 +23,20 @@ export const Settings = () => {
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <DialogContent onPointerDownOutside={(e) => e.preventDefault()} showCloseButton={false} className="max-w-2xl flex flex-col">
-        <Tabs defaultValue="general" className="w-full flex flex-col flex-1 min-h-0">
+      <DialogContent onPointerDownOutside={(e) => e.preventDefault()} showCloseButton={false} className="max-w-2xl h-120 flex flex-col">
+        <Tabs defaultValue="general" className="w-full h-full flex flex-col overflow-hidden">
           <TabsList className="w-full">
             <TabsTrigger value="general">General</TabsTrigger>
             <TabsTrigger value="providers">Providers</TabsTrigger>
             <TabsTrigger value="servers">Servers</TabsTrigger>
           </TabsList>
-          <TabsContent value="general" className="flex-1 min-h-0 mt-6">
+          <TabsContent value="general" className="flex-1 mt-6 h-0">
             <SettingsGeneral />
           </TabsContent>
-          <TabsContent value="providers" className="flex-1 min-h-0 mt-6">
+          <TabsContent value="providers" className="flex-1 mt-6 h-0">
             <Providers />
           </TabsContent>
-          <TabsContent value="servers" className="flex-1 min-h-0 mt-6">
+          <TabsContent value="servers" className="flex-1 mt-6 h-0">
             <Card>
               <CardHeader>
                 <CardTitle>Settings</CardTitle>
