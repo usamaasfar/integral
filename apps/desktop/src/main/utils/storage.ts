@@ -24,6 +24,8 @@ export default {
       if (!safeStorage.isEncryptionAvailable()) throw new Error("Encryption not available");
 
       const encrypted = store.get(`secure::${key}`);
+      if (!encrypted) return undefined;
+      
       const buffer = Buffer.from(encrypted as string, "base64");
       return safeStorage.decryptString(buffer);
     },

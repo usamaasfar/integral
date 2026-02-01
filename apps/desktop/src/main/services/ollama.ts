@@ -13,8 +13,7 @@ export default {
     try {
       const response = await fetch(`${OLLAMA_BASE_URL}/api/version`);
       return response.ok;
-    } catch (error) {
-      console.error(error);
+    } catch {
       return false;
     }
   },
@@ -23,8 +22,7 @@ export default {
       const response = await fetch(`${OLLAMA_BASE_URL}/api/tags`);
       const data: ListResponse = await response.json();
       return data.models.map((model) => model.name) || [];
-    } catch (error) {
-      console.error(error);
+    } catch {
       return [];
     }
   },

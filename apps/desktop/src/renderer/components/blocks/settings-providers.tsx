@@ -1,133 +1,117 @@
 import { zodResolver } from "@hookform/resolvers/zod";
-import React, { useEffect } from "react";
+import { Loader } from "lucide-react";
+import { useEffect, useMemo } from "react";
 import { Controller, useForm } from "react-hook-form";
 import * as z from "zod";
 
-import { Avatar, AvatarFallback } from "~/renderer/components/ui/avatar";
+import { PROVIDERS, type ProviderType } from "~/common/providers";
 import { Button } from "~/renderer/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader } from "~/renderer/components/ui/card";
 import { Field, FieldError } from "~/renderer/components/ui/field";
 import { Input } from "~/renderer/components/ui/input";
 import { Label } from "~/renderer/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "~/renderer/components/ui/select";
-
-export type ProviderType = "openai" | "anthropic" | "groq" | "cerebras" | "google" | "ollama" | "openrouter" | "openai-compatible";
-
-export const PROVIDERS: Array<{ type: ProviderType; name: string; displayName: string; logo: string }> = [
-  {
-    type: "openai",
-    name: "openai",
-    displayName: "OpenAI",
-    logo: "https://raw.githubusercontent.com/lobehub/lobe-icons/refs/heads/master/packages/static-png/dark/openai.png",
-  },
-  {
-    type: "anthropic",
-    name: "anthropic",
-    displayName: "Anthropic",
-    logo: "https://raw.githubusercontent.com/lobehub/lobe-icons/refs/heads/master/packages/static-png/dark/claude-color.png",
-  },
-  {
-    type: "groq",
-    name: "groq",
-    displayName: "Groq",
-    logo: "https://raw.githubusercontent.com/lobehub/lobe-icons/refs/heads/master/packages/static-png/dark/groq.png",
-  },
-  {
-    type: "cerebras",
-    name: "cerebras",
-    displayName: "Cerebras",
-    logo: "https://raw.githubusercontent.com/lobehub/lobe-icons/refs/heads/master/packages/static-png/dark/cerebras-color.png",
-  },
-  {
-    type: "google",
-    name: "google",
-    displayName: "Google",
-    logo: "https://raw.githubusercontent.com/lobehub/lobe-icons/refs/heads/master/packages/static-png/dark/gemini-color.png",
-  },
-  {
-    type: "ollama",
-    name: "ollama",
-    displayName: "Ollama",
-    logo: "https://raw.githubusercontent.com/lobehub/lobe-icons/refs/heads/master/packages/static-png/dark/ollama.png",
-  },
-  {
-    type: "openrouter",
-    name: "openrouter",
-    displayName: "OpenRouter",
-    logo: "https://raw.githubusercontent.com/lobehub/lobe-icons/refs/heads/master/packages/static-png/dark/openrouter.png",
-  },
-  {
-    type: "openai-compatible",
-    name: "openai-compatible",
-    displayName: "OpenAI Compatible",
-    logo: "https://raw.githubusercontent.com/lobehub/lobe-icons/refs/heads/master/packages/static-png/dark/openai.png",
-  },
-];
-
-const providerSchema = z.object({
-  selectedProvider: z.string(),
-  modelName: z.string().min(1, "Model name is required"),
-  apiKey: z.string().optional(),
-  name: z.string().optional(),
-  baseUrl: z.string().url("Invalid URL").optional(),
-});
+import { useSettingsStore } from "~/renderer/stores/settings";
 
 export const Providers = () => {
-  const [ollamaModels, setOllamaModels] = React.useState<string[]>([]);
+  const {
+    selectedProvider,
+    providers,
+    ollamaHealth,
+    ollamaModels,
+    isLoading,
+    checkOllamaHealth,
+    loadOllamaModels,
+    loadProviders,
+    saveProvider,
+  } = useSettingsStore();
+
+  const providerSchema = useMemo(() => {
+    return z
+      .object({
+        selectedProvider: z.string(),
+        modelName: z.string().min(1, "Model name is required"),
+        apiKey: z.string().optional(),
+        name: z.string().optional(),
+        baseUrl: z.string().optional(),
+      })
+      .superRefine((data, ctx) => {
+        const provider = data.selectedProvider as ProviderType;
+
+        if (provider === "openai" || provider === "anthropic" || provider === "google") {
+          if (!data.apiKey) {
+            ctx.addIssue({ code: "custom", message: "API Key is required", path: ["apiKey"] });
+          }
+        }
+
+        if (provider === "openai-compatible") {
+          if (!data.apiKey) {
+            ctx.addIssue({ code: "custom", message: "API Key is required", path: ["apiKey"] });
+          }
+          if (!data.baseUrl) {
+            ctx.addIssue({ code: "custom", message: "Base URL is required", path: ["baseUrl"] });
+          }
+          if (!data.name) {
+            ctx.addIssue({ code: "custom", message: "Provider name is required", path: ["name"] });
+          }
+        }
+      });
+  }, []);
 
   const form = useForm<z.infer<typeof providerSchema>>({
     resolver: zodResolver(providerSchema),
-    defaultValues: {
-      selectedProvider: "ollama",
-      modelName: "kimi-k2.5:cloud",
-      apiKey: "",
-      name: "",
-      baseUrl: "",
-    },
+    defaultValues: { selectedProvider: selectedProvider, modelName: "", apiKey: "", name: "", baseUrl: "" },
   });
 
-  const selectedProvider = form.watch("selectedProvider");
-  const isOpenAICompatible = selectedProvider === "openai-compatible";
-  const isOllama = selectedProvider === "ollama";
+  const formSelectedProvider = form.watch("selectedProvider") as ProviderType;
+  const isOllama = formSelectedProvider === "ollama";
+  const isOpenAICompatible = formSelectedProvider === "openai-compatible";
 
   useEffect(() => {
-    const loadSettings = async () => {
-      try {
-        const settings = await window.electronAPI.getProviderSettings();
-        const apiKey = await window.electronAPI.getProviderApiKey(settings.selectedProvider);
+    loadProviders();
+  }, [loadProviders]);
 
-        form.reset({
-          selectedProvider: settings.selectedProvider,
-          modelName: settings.modelName,
-          apiKey: apiKey || "",
-          name: settings.name,
-          baseUrl: settings.baseUrl,
-        });
-      } catch (error) {
-        console.error("Failed to load provider settings:", error);
-      }
+  useEffect(() => {
+    checkOllamaHealth();
+  }, [checkOllamaHealth]);
+
+  useEffect(() => {
+    if (isOllama && ollamaHealth) loadOllamaModels();
+  }, [isOllama, ollamaHealth, loadOllamaModels]);
+
+  useEffect(() => {
+    const providerConfig = providers[formSelectedProvider];
+    const formData = {
+      selectedProvider: formSelectedProvider,
+      modelName: providerConfig?.model || "",
+      apiKey: providerConfig?.apiKey || "",
+      name: providerConfig?.name || "",
+      baseUrl: providerConfig?.baseUrl || "",
     };
-
-    loadSettings();
-  }, [form]);
-
-  useEffect(() => {
-    if (isOllama) {
-      window.electronAPI.getOllamaModels().then(setOllamaModels);
-    }
-  }, [isOllama]);
+    form.reset(formData);
+  }, [formSelectedProvider, providers, form]);
 
   const onSubmit = async (data: z.infer<typeof providerSchema>) => {
-    try {
-      await window.electronAPI.saveProviderSettings(data);
-      console.log("Settings saved successfully");
-    } catch (error) {
-      console.error("Failed to save settings:", error);
-    }
+    await saveProvider({
+      provider: data.selectedProvider as ProviderType,
+      model: data.modelName,
+      apiKey: data.apiKey,
+      name: data.name,
+      baseUrl: data.baseUrl,
+    });
+    form.reset(data);
   };
 
+  const canSave = isOllama ? ollamaHealth && ollamaModels.length > 0 : true;
+  const hasChanges = form.formState.isDirty || formSelectedProvider !== selectedProvider;
+
   return (
-    <Card>
+    <Card className="relative h-full flex flex-col">
+      {isLoading && (
+        <div className="absolute inset-0 flex items-center justify-center bg-background/80 backdrop-blur-sm z-50 rounded-lg">
+          <Loader className="h-6 w-6 animate-spin text-muted-foreground" />
+        </div>
+      )}
       <CardHeader>
         <CardDescription>Configure your AI provider and model settings</CardDescription>
       </CardHeader>
@@ -169,13 +153,8 @@ export const Providers = () => {
                             onError={(e) => {
                               const target = e.target as HTMLImageElement;
                               target.style.display = "none";
-                              const fallback = target.nextElementSibling as HTMLElement;
-                              if (fallback) fallback.style.display = "inline-flex";
                             }}
                           />
-                          <Avatar size="xs" className="hidden w-4 h-4">
-                            <AvatarFallback className="text-xs">{provider.displayName.charAt(0).toUpperCase()}</AvatarFallback>
-                          </Avatar>
                           <span>{provider.displayName}</span>
                         </div>
                       </SelectItem>
@@ -186,32 +165,80 @@ export const Providers = () => {
             )}
           />
 
+          {isOpenAICompatible && (
+            <Controller
+              name="name"
+              control={form.control}
+              render={({ field, fieldState }) => (
+                <Field data-invalid={fieldState.invalid}>
+                  <Label htmlFor={field.name}>Provider Name</Label>
+                  <Input {...field} id={field.name} placeholder="Custom provider name" aria-invalid={fieldState.invalid} />
+                  {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+                </Field>
+              )}
+            />
+          )}
+
           <Controller
             name="modelName"
             control={form.control}
-            render={({ field, fieldState }) => (
-              <Field data-invalid={fieldState.invalid}>
-                <Label htmlFor={field.name}>Model Name</Label>
-                {isOllama ? (
-                  <Select value={field.value} onValueChange={field.onChange}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select a model" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {ollamaModels.map((model) => (
-                        <SelectItem key={model} value={model}>
-                          {model}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                ) : (
-                  <Input {...field} id={field.name} placeholder="gpt-4" aria-invalid={fieldState.invalid} />
-                )}
-                {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
-              </Field>
-            )}
+            render={({ field, fieldState }) => {
+              const ollamaError =
+                isOllama && !ollamaHealth
+                  ? { message: "Can't connect to Ollama" }
+                  : isOllama && ollamaModels.length === 0
+                    ? { message: "Run: ollama run kimi-k2.5:cloud, then restart Integral" }
+                    : null;
+
+              const hasError = fieldState.invalid || ollamaError;
+
+              const placeholder = {
+                openai: "gpt-5.2",
+                anthropic: "claude-sonnet-4-5",
+                google: "gemini-3-flash-preview",
+                "openai-compatible": "model name",
+                ollama: "Select a model",
+              }[formSelectedProvider];
+
+              return (
+                <Field data-invalid={hasError}>
+                  <Label htmlFor={field.name}>Model Name</Label>
+                  {isOllama ? (
+                    <Select value={field.value} onValueChange={field.onChange} disabled={!ollamaHealth || ollamaModels.length === 0}>
+                      <SelectTrigger aria-invalid={!!hasError}>
+                        <SelectValue placeholder={placeholder} />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {ollamaModels.map((model) => (
+                          <SelectItem key={model} value={model}>
+                            {model}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  ) : (
+                    <Input {...field} id={field.name} placeholder={placeholder} aria-invalid={fieldState.invalid} />
+                  )}
+                  {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+                  {ollamaError && <FieldError errors={[ollamaError]} />}
+                </Field>
+              );
+            }}
           />
+
+          {isOpenAICompatible && (
+            <Controller
+              name="baseUrl"
+              control={form.control}
+              render={({ field, fieldState }) => (
+                <Field data-invalid={fieldState.invalid}>
+                  <Label htmlFor={field.name}>Base URL</Label>
+                  <Input {...field} id={field.name} placeholder="https://api.example.com/v1" aria-invalid={fieldState.invalid} />
+                  {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+                </Field>
+              )}
+            />
+          )}
 
           {!isOllama && (
             <Controller
@@ -227,36 +254,8 @@ export const Providers = () => {
             />
           )}
 
-          {isOpenAICompatible && (
-            <>
-              <Controller
-                name="name"
-                control={form.control}
-                render={({ field, fieldState }) => (
-                  <Field data-invalid={fieldState.invalid}>
-                    <Label htmlFor={field.name}>Provider Name</Label>
-                    <Input {...field} id={field.name} placeholder="Custom provider name" aria-invalid={fieldState.invalid} />
-                    {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
-                  </Field>
-                )}
-              />
-
-              <Controller
-                name="baseUrl"
-                control={form.control}
-                render={({ field, fieldState }) => (
-                  <Field data-invalid={fieldState.invalid}>
-                    <Label htmlFor={field.name}>Base URL</Label>
-                    <Input {...field} id={field.name} placeholder="https://api.example.com/v1" aria-invalid={fieldState.invalid} />
-                    {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
-                  </Field>
-                )}
-              />
-            </>
-          )}
-
-          <Button type="submit" className="w-full" disabled={form.formState.isSubmitting}>
-            Save
+          <Button type="submit" className="w-full" disabled={!canSave || !hasChanges || form.formState.isSubmitting}>
+            Use
           </Button>
         </form>
       </CardContent>

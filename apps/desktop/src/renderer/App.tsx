@@ -3,11 +3,19 @@ import ComposerScreen from "~/renderer/screens/composer";
 import { useSettingsStore } from "~/renderer/stores/settings";
 
 const App = () => {
-  const loadSettings = useSettingsStore((state) => state.loadSettings);
+  const { loadSettings, loadProviders, checkOllamaHealth } = useSettingsStore();
 
   useEffect(() => {
-    loadSettings();
-  }, [loadSettings]);
+    const initializeApp = async () => {
+      await Promise.all([
+        loadSettings(),
+        loadProviders(),
+        checkOllamaHealth(),
+      ]);
+    };
+    
+    initializeApp();
+  }, [loadSettings, loadProviders, checkOllamaHealth]);
 
   return (
     <main className="h-screen w-screen ">

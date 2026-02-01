@@ -1,4 +1,5 @@
 import { zodResolver } from "@hookform/resolvers/zod";
+import { Loader } from "lucide-react";
 import { useEffect } from "react";
 import { Controller, useForm } from "react-hook-form";
 import * as z from "zod";
@@ -17,7 +18,7 @@ const formSchema = z.object({
 });
 
 export const SettingsGeneral = () => {
-  const { username, customInstructions, updateSettings } = useSettingsStore();
+  const { username, customInstructions, isLoading, updateSettings } = useSettingsStore();
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -33,7 +34,12 @@ export const SettingsGeneral = () => {
   };
 
   return (
-    <Card>
+    <Card className="relative h-full flex flex-col">
+      {isLoading && (
+        <div className="absolute inset-0 flex items-center justify-center bg-background/80 backdrop-blur-sm z-50 rounded-lg">
+          <Loader className="h-6 w-6 animate-spin text-muted-foreground" />
+        </div>
+      )}
       <CardHeader>
         <CardDescription>Configure how the AI should interact with you</CardDescription>
       </CardHeader>

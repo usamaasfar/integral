@@ -48,6 +48,9 @@ ipcMain.handle("save-provider-config", (_event, config) => {
 });
 
 ipcMain.handle("get-provider-config", (_event, provider: string) => {
+  if (!provider) {
+    return { apiKey: undefined, config: {} };
+  }
   return {
     apiKey: storage.secureStore.get(`${provider}-provider-api-key`),
     config: storage.store.get(`${provider}-provider-config`, {}),
