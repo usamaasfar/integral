@@ -1,5 +1,6 @@
 import { experimental_createMCPClient as createMCPClient } from "@ai-sdk/mcp";
 import { ElectronOAuthProvider } from "./mcp-oauth";
+import storage from "~/main/utils/storage";
 
 interface ConnectedMCP {
   name: string;
@@ -344,7 +345,6 @@ export class MCPManager {
    * Save server config to persistent storage
    */
   private saveServerConfig(namespace: string, serverUrl: string, displayName: string, iconUrl: string): void {
-    const storage = require("~/main/utils/storage").default;
     const savedServers = storage.store.get("connected-mcps", []) as MCPServerConfig[];
     
     // Remove existing entry if it exists
@@ -366,7 +366,6 @@ export class MCPManager {
    * Remove server config from persistent storage
    */
   private removeServerConfig(namespace: string): void {
-    const storage = require("~/main/utils/storage").default;
     const savedServers = storage.store.get("connected-mcps", []) as MCPServerConfig[];
     const filteredServers = savedServers.filter(s => s.namespace !== namespace);
     storage.store.set("connected-mcps", filteredServers);
@@ -380,7 +379,6 @@ export class MCPManager {
     console.log("🔄 Initializing MCP connections...");
     
     // Get list of saved server configs from storage
-    const storage = require("~/main/utils/storage").default;
     const savedServers = storage.store.get("connected-mcps", []) as MCPServerConfig[];
     
     if (savedServers.length === 0) {

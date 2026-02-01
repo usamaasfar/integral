@@ -4,6 +4,7 @@ import started from "electron-squirrel-startup";
 import Store from "electron-store";
 import "./main/ipc";
 import { mcpManager } from "./main/services/mcp";
+import storage from "~/main/utils/storage";
 
 // Initialize electron-store for renderer process
 Store.initRenderer();

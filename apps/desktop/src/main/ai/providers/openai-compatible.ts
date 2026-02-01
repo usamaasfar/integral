@@ -3,15 +3,15 @@ import { createOpenAICompatible } from "@ai-sdk/openai-compatible";
 import storage from "~/main/utils/storage";
 
 export default function openaiCompatibleProvider(model: string) {
-  const config = storage.store.get("openaiCompatible-provider-config") as {
+  const config = storage.store.get("openai-compatible-provider-config") as {
     name: string;
-    baseURL: string;
+    baseUrl: string;
   };
 
   const provider = createOpenAICompatible({
-    name: config.name,
-    apiKey: storage.secureStore.get("openaiCompatible-provider-api-key"),
-    baseURL: config.baseURL,
+    name: config.name || "openai-compatible",
+    apiKey: storage.secureStore.get("openai-compatible-provider-api-key"),
+    baseURL: config.baseUrl,
     includeUsage: true,
   });
 

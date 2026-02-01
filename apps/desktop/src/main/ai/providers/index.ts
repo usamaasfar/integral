@@ -10,7 +10,7 @@ const providers = {
   openai: openaiProvider,
   anthropic: anthropicProvider,
   google: googleProvider,
-  openaiCompatible: openaiCompatibleProvider,
+  "openai-compatible": openaiCompatibleProvider,
 };
 
 export const getModel = () => {
@@ -19,6 +19,14 @@ export const getModel = () => {
     provider: keyof typeof providers;
     model: string;
   };
+
+  console.log("🔍 Debug getModel:", { selectedProvider, providerConfig });
+  console.log("🔍 Available providers:", Object.keys(providers));
+
+  if (!providers[providerConfig.provider]) {
+    console.error(`❌ Provider '${providerConfig.provider}' not found in providers object`);
+    throw new Error(`Provider '${providerConfig.provider}' is not supported`);
+  }
 
   return providers[providerConfig.provider](providerConfig.model);
 };
