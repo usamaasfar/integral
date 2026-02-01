@@ -23,6 +23,7 @@ ipcMain.handle("get-secure-storage", (_event, key: string) => {
 });
 
 ipcMain.handle("set-settings", (_event, settings) => {
+  console.log(settings.username);
   storage.store.set("username", settings.username);
   storage.store.set("customInstructions", settings.customInstructions);
   return true;
@@ -60,39 +61,3 @@ ipcMain.handle("get-ollama-health", async () => {
 ipcMain.handle("get-ollama-models", async () => {
   return await ollama.models();
 });
-
-// // Get Ollama models
-// ipcMain.handle("get-ollama-models", async () => {
-//   try {
-//     const fetch = require("node-fetch");
-//     const response = await fetch("http://localhost:11434/api/tags");
-//     const data = await response.json();
-//     return data.models?.map((model: any) => model.name) || [];
-//   } catch (error) {
-//     console.error("Failed to fetch Ollama models:", error);
-//     return ["kimi-k2.5:cloud"]; // fallback
-//   }
-// });
-
-// // AI Composer handler
-// ipcMain.on("ai-compose", async (event, prompt: string) => {
-//   try {
-//     const agent = composer([]);
-
-//     const result = await agent?.generate({
-//       prompt,
-//       onStepFinish: (step) => {
-//         // Extract text from step content for UI
-//         const textContent = step.content?.find((c) => c.type === "text");
-//         const stepWithText = { ...step, text: textContent?.text || step.text };
-
-//         event.reply("ai-step", stepWithText);
-//       },
-//     });
-
-//     event.reply("ai-complete", result);
-//   } catch (error) {
-//     console.error("AI Error:", error);
-//     event.reply("ai-error", error.message);
-//   }
-// });

@@ -1,38 +1,21 @@
 export interface ElectronAPI {
   // Storage
-  setStorage: (key: string, value: any) => Promise<{ success: boolean }>;
-  getStorage: (key: string, defaultValue?: any) => Promise<any>;
-  // Secure Storage
-  setSecureStorage: (key: string, value: string) => Promise<{ success: boolean }>;
-  getSecureStorage: (key: string, defaultValue?: string) => Promise<string>;
+  setStorage: (key: string, value: any) => Promise<boolean>;
+  getStorage: (key: string) => Promise<any>;
+  setSecureStorage: (key: string, value: string) => Promise<boolean>;
+  getSecureStorage: (key: string) => Promise<string>;
+  
   // Settings
+  setSettings: (settings: any) => Promise<boolean>;
   getSettings: () => Promise<{ username: string; customInstructions: string }>;
-  saveSettings: (settings: any) => Promise<{ success: boolean }>;
-  // Provider Settings
-  getProviderSettings: () => Promise<{ selectedProvider: string; modelName: string; name: string; baseUrl: string }>;
-  saveProviderSettings: (settings: any) => Promise<{ success: boolean }>;
-  getProviderApiKey: (provider: string) => Promise<string>;
+  
+  // Provider Config
+  saveProviderConfig: (config: any) => Promise<boolean>;
+  getProviderConfig: (provider: string) => Promise<{ apiKey: string; config: any }>;
+  
+  // Ollama
+  getOllamaHealth: () => Promise<boolean>;
   getOllamaModels: () => Promise<string[]>;
-  // AI Composer
-  aiCompose: (prompt: string) => void;
-  onAIStep: (callback: (step: any) => void) => void;
-  onAIComplete: (callback: (result: any) => void) => void;
-  onAIError: (callback: (error: string) => void) => void;
-
-  // MCP OAuth functions
-  getAvailableMCPs: () => Promise<Array<{ name: string; url: string }>>;
-  connectMCP: (mcpName: string) => Promise<{ success: boolean; needsAuth?: boolean; tools?: any[] }>;
-  finishOAuth: (mcpName: string, authCode: string) => Promise<{ success: boolean; tools?: any[] }>;
-  getConnectedMCPs: () => Promise<string[]>;
-
-  // OAuth callback listener
-  onOAuthCallback: (callback: (code: string) => void) => void;
-
-  // AI generation
-  generateWithMCP: (prompt: string) => void;
-  onAgentStep: (callback: (step: string) => void) => void;
-  onGenerateComplete: (callback: (result: any) => void) => void;
-  onGenerateError: (callback: (result: any) => void) => void;
 }
 
 declare global {

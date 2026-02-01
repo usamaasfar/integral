@@ -1,17 +1,10 @@
-import { zodResolver } from "@hookform/resolvers/zod";
 import { useEffect, useState } from "react";
-import { Controller, useForm } from "react-hook-form";
-import * as z from "zod";
 
+import { SettingsGeneral } from "~/renderer/components/blocks/settings-general";
 import { Providers } from "~/renderer/components/blocks/settings-providers";
-import { Button } from "~/renderer/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "~/renderer/components/ui/card";
 import { Dialog, DialogContent } from "~/renderer/components/ui/dialog";
-import { Field, FieldError } from "~/renderer/components/ui/field";
-import { Input } from "~/renderer/components/ui/input";
-import { Label } from "~/renderer/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "~/renderer/components/ui/tabs";
-import { Textarea } from "~/renderer/components/ui/textarea";
 
 export const Settings = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -38,7 +31,7 @@ export const Settings = () => {
             <TabsTrigger value="servers">Servers</TabsTrigger>
           </TabsList>
           <TabsContent value="general">
-            <General />
+            <SettingsGeneral />
           </TabsContent>
           <TabsContent value="providers">
             <Providers />
@@ -55,72 +48,5 @@ export const Settings = () => {
         </Tabs>
       </DialogContent>
     </Dialog>
-  );
-};
-
-const formSchema = z.object({
-  username: z.string().min(3, "Username must be at least 3 characters").max(20, "Username must be at most 20 characters"),
-  customInstructions: z.string().max(500, "Instructions must be at most 500 characters"),
-});
-
-const General = () => {
-  const form = useForm<z.infer<typeof formSchema>>({
-    resolver: zodResolver(formSchema),
-    defaultValues: { username: "", customInstructions: "" },
-  });
-
-  useEffect(() => {
-    window.electronAPI.getSettings().then((settings) => {
-      form.reset(settings);
-    });
-  }, [form]);
-
-  const onSubmit = async (data: z.infer<typeof formSchema>) => {
-    await window.electronAPI.saveSettings(data);
-  };
-
-  return (
-    <Card>
-      <CardHeader>
-        <CardDescription>Configure how the AI should interact with you</CardDescription>
-      </CardHeader>
-      <CardContent>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-          <Controller
-            name="username"
-            control={form.control}
-            render={({ field, fieldState }) => (
-              <Field data-invalid={fieldState.invalid}>
-                <Label htmlFor={field.name}>Username</Label>
-                <Input {...field} id={field.name} placeholder="How should the AI call you?" aria-invalid={fieldState.invalid} />
-                {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
-              </Field>
-            )}
-          />
-
-          <Controller
-            name="customInstructions"
-            control={form.control}
-            render={({ field, fieldState }) => (
-              <Field data-invalid={fieldState.invalid}>
-                <Label htmlFor={field.name}>Custom Instructions</Label>
-                <Textarea
-                  {...field}
-                  id={field.name}
-                  placeholder="Add custom instructions for the AI..."
-                  rows={6}
-                  aria-invalid={fieldState.invalid}
-                />
-                {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
-              </Field>
-            )}
-          />
-
-          <Button type="submit" className="w-full" disabled={!form.formState.isDirty}>
-            Save Settings
-          </Button>
-        </form>
-      </CardContent>
-    </Card>
   );
 };
