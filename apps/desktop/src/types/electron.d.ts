@@ -18,7 +18,7 @@ export interface ElectronAPI {
   getOllamaModels: () => Promise<string[]>;
   
   // AI Composition
-  aiCompose: (prompt: string) => Promise<any>;
+  aiCompose: (prompt: string, mentions?: string[]) => Promise<any>;
   onAIStep: (callback: (step: any) => void) => void;
   onAIComplete: (callback: (result: any) => void) => void;
   onAIError: (callback: (error: any) => void) => void;

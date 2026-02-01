@@ -3,6 +3,7 @@ import { app, BrowserWindow } from "electron";
 import started from "electron-squirrel-startup";
 import Store from "electron-store";
 import "./main/ipc";
+import { mcpManager } from "./main/services/mcp";
 
 // Initialize electron-store for renderer process
 Store.initRenderer();
@@ -43,6 +44,11 @@ const createWindow = () => {
 
   // Open the DevTools.
   mainWindow.webContents.openDevTools();
+
+  // Initialize MCP connections after window is ready
+  mainWindow.webContents.once('did-finish-load', () => {
+    mcpManager.initializeConnections();
+  });
 };
 
 // Handle OAuth callback protocol
@@ -53,10 +59,13 @@ app.on("open-url", (event, url) => {
   if (url.startsWith("integral.computer://oauth/callback")) {
     const urlObj = new URL(url);
     const code = urlObj.searchParams.get("code");
+    const state = urlObj.searchParams.get("state") || "";
 
     if (code && mainWindow) {
-      // Send the auth code to the renderer process
-      mainWindow.webContents.send("oauth-callback", code);
+      console.log("Sending OAuth callback to renderer:", { code: code.substring(0, 10) + "...", state });
+
+      // Send MCP OAuth callback to renderer (state is optional)
+      mainWindow.webContents.send("mcp-oauth-callback", { code, state });
 
       // Focus the app window
       if (mainWindow.isMinimized()) mainWindow.restore();

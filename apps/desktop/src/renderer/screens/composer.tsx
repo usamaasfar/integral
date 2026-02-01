@@ -32,11 +32,11 @@ const Composer = () => {
     window.electronAPI.onAIError(errorHandler);
   }, []);
 
-  const handleAIResponse = async (prompt: string) => {
+  const handleAIResponse = async (prompt: string, mentions?: string[]) => {
     setSteps([]);
     setResult(null);
     setIsLoading(true);
-    window.electronAPI.aiCompose(prompt);
+    window.electronAPI.aiCompose(prompt, mentions);
   };
 
   return (

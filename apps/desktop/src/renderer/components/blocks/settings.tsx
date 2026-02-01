@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 
 import { SettingsGeneral } from "~/renderer/components/blocks/settings-general";
 import { Providers } from "~/renderer/components/blocks/settings-providers";
+import { SettingsServers } from "~/renderer/components/blocks/settings-servers";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "~/renderer/components/ui/card";
 import { Dialog, DialogContent } from "~/renderer/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "~/renderer/components/ui/tabs";
@@ -37,13 +38,7 @@ export const Settings = () => {
             <Providers />
           </TabsContent>
           <TabsContent value="servers" className="flex-1 mt-6 h-0">
-            <Card>
-              <CardHeader>
-                <CardTitle>Settings</CardTitle>
-                <CardDescription>Manage your account preferences and options. Customize your experience to fit your needs.</CardDescription>
-              </CardHeader>
-              <CardContent className="text-muted-foreground text-sm">Configure notifications, security, and themes.</CardContent>
-            </Card>
+            <SettingsServers />
           </TabsContent>
         </Tabs>
       </DialogContent>

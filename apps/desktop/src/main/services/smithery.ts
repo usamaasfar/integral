@@ -1,6 +1,6 @@
 import Smithery from "@smithery/api";
 
-const client = new Smithery({ apiKey: process.env.SMITHEREY_API_KEY });
+const client = new Smithery({ apiKey: "0d61b2e2-3b2e-4f04-b536-3cad6ca12431" });
 
 export default {
   health: async () => {
@@ -12,22 +12,13 @@ export default {
       return false;
     }
   },
-  search: async ({ term, verified }: { term: string; verified: Smithery.ServerListParams["verified"] }) => {
+  searchServers: async (term: string) => {
     try {
-      const response = await client.servers.list({ q: term, verified });
+      const response = await client.servers.list({ q: term });
       return response.servers;
     } catch (error) {
-      console.error(error);
+      console.error("Smithery search error:", error);
       return [];
-    }
-  },
-  info: async (namespace: string) => {
-    try {
-      const response = await client.servers.get("server", { namespace });
-      return response;
-    } catch (error) {
-      console.error(error);
-      return null;
     }
   },
 };

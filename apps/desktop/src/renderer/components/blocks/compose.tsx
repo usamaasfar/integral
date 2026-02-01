@@ -5,33 +5,17 @@ import { Avatar, AvatarFallback, AvatarGroup, AvatarImage } from "~/renderer/com
 import { Dialog, DialogContent } from "~/renderer/components/ui/dialog";
 import { Kbd, KbdGroup } from "~/renderer/components/ui/kbd";
 import { Textarea } from "~/renderer/components/ui/textarea";
+import { useSettingsStore } from "~/renderer/stores/settings";
 
-const mcps = [
-  {
-    id: "1",
-    name: "Linear",
-    icon: "https://www.svgrepo.com/show/333141/linear.svg",
-  },
-  {
-    id: "2",
-    name: "Gmail",
-    icon: "https://www.svgrepo.com/show/452213/gmail.svg",
-  },
-  {
-    id: "3",
-    name: "Slack",
-    icon: "https://www.svgrepo.com/show/452102/slack.svg",
-  },
-  {
-    id: "4",
-    name: "Outlook",
-    icon: "https://www.svgrepo.com/show/373951/outlook.svg",
-  },
-];
-
-export function Compose({ onSubmit }: { onSubmit?: (prompt: string) => Promise<any> }) {
+export function Compose({ onSubmit }: { onSubmit?: (prompt: string, mentions?: string[]) => Promise<any> }) {
   const [open, setOpen] = useState(false);
   const [value, setValue] = useState<string[]>([]);
+
+  const { connectedMCPs, loadConnectedMCPs } = useSettingsStore();
+
+  useEffect(() => {
+    loadConnectedMCPs();
+  }, [loadConnectedMCPs]);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -50,10 +34,23 @@ export function Compose({ onSubmit }: { onSubmit?: (prompt: string) => Promise<a
     if (e.key === "Enter" && e.metaKey) {
       const prompt = (e.target as HTMLTextAreaElement).value;
       console.log("Sending prompt:", prompt);
+      console.log("Value array:", value);
+      console.log("Connected MCPs:", connectedMCPs);
+
+      // Extract mentions from the value array (these are the @mentioned MCPs)
+      const mentions = value.map(mention => {
+        const mcp = connectedMCPs.find(m => m.displayName === mention);
+        return mcp?.namespace || mention.toLowerCase();
+      });
+
+      console.log("Extracted mentions:", mentions);
 
       try {
         if (onSubmit) {
-          await onSubmit(prompt);
+          await onSubmit(prompt, mentions);
+        } else {
+          // Use electron API with mentions - ensure we pass an array even if empty
+          window.electronAPI.aiCompose(prompt, mentions.length > 0 ? mentions : []);
         }
       } catch (error) {
         console.error("Error:", error);
@@ -91,17 +88,17 @@ export function Compose({ onSubmit }: { onSubmit?: (prompt: string) => Promise<a
               <Textarea />
             </Mention.MentionInput>
             <Mention.MentionContent className="data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 relative z-[60] min-w-[var(--dice-anchor-width)] overflow-hidden rounded-md border border-zinc-200 bg-white p-1 text-zinc-950 shadow-md data-[state=closed]:animate-out data-[state=open]:animate-in dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-50">
-              {mcps.map((mcp) => (
+              {connectedMCPs.map((mcp) => (
                 <Mention.MentionItem
-                  key={mcp.id}
-                  value={mcp.name}
+                  key={mcp.namespace}
+                  value={mcp.displayName}
                   className="relative flex items-center gap-1.5 w-full cursor-pointer select-none rounded-sm px-2 py-1.5 text-sm outline-hidden data-disabled:pointer-events-none data-highlighted:bg-zinc-100 data-highlighted:text-zinc-900 data-disabled:opacity-50 dark:data-highlighted:bg-zinc-800 dark:data-highlighted:text-zinc-50"
                 >
                   <Avatar size="xs">
-                    <AvatarImage src={mcp.icon} />
-                    <AvatarFallback>{mcp.name.slice(0, 1)}</AvatarFallback>
+                    <AvatarImage src={mcp.iconUrl} />
+                    <AvatarFallback>{mcp.displayName.slice(0, 1)}</AvatarFallback>
                   </Avatar>
-                  <span className="text-sm">{mcp.name}</span>
+                  <span className="text-sm">{mcp.displayName}</span>
                 </Mention.MentionItem>
               ))}
             </Mention.MentionContent>
@@ -111,10 +108,10 @@ export function Compose({ onSubmit }: { onSubmit?: (prompt: string) => Promise<a
             {value.length > 0 ? (
               <AvatarGroup>
                 {value.map((mention, index) => {
-                  const mcp = mcps.find((m) => m.name === mention);
+                  const mcp = connectedMCPs.find((m) => m.displayName === mention);
                   return (
                     <Avatar key={index} size="sm" className="border-2 border-black bg-white">
-                      <AvatarImage src={mcp?.icon} className="object-contain p-1" />
+                      <AvatarImage src={mcp?.iconUrl} className="object-contain p-1" />
                       <AvatarFallback>{mention.slice(0, 1)}</AvatarFallback>
                     </Avatar>
                   );

@@ -14,6 +14,43 @@ interface ProviderConfig {
   baseUrl?: string;
 }
 
+interface MCPServerConfig {
+  access_token: string;
+  refresh_token: string;
+  expires_at: number;
+  namespace: string;
+  displayName: string;
+  iconUrl: string;
+  serverUrl: string;
+  connectedAt: string;
+}
+
+interface SmitheryServer {
+  id: string;
+  qualifiedName: string;
+  namespace: string | null;
+  slug: string | null;
+  displayName: string;
+  description: string;
+  iconUrl: string | null;
+  verified: boolean;
+  useCount: number;
+  remote: boolean | null;
+  isDeployed: boolean;
+  createdAt: string;
+  homepage: string;
+  owner: string | null;
+}
+
+interface OAuthSession {
+  sessionId: string;
+  serverMetadata: {
+    namespace: string;
+    displayName: string;
+    iconUrl: string;
+  };
+}
+
 interface SettingsStore extends GeneralSettings {
   isLoading: boolean;
 
@@ -24,6 +61,13 @@ interface SettingsStore extends GeneralSettings {
   // Ollama state
   ollamaHealth: boolean;
   ollamaModels: string[];
+
+  // MCP state
+  connectedMCPs: MCPServerConfig[];
+  searchResults: SmitheryServer[];
+  isSearching: boolean;
+  isConnecting: boolean;
+  pendingOAuthSession: OAuthSession | null;
 
   // General settings methods
   loadSettings: () => Promise<void>;
@@ -36,9 +80,16 @@ interface SettingsStore extends GeneralSettings {
   // Ollama methods
   checkOllamaHealth: () => Promise<void>;
   loadOllamaModels: () => Promise<void>;
+
+  // MCP methods
+  searchMCPs: (term: string) => Promise<void>;
+  connectMCP: (serverConfig: SmitheryServer) => Promise<void>;
+  disconnectMCP: (namespace: string) => Promise<void>;
+  loadConnectedMCPs: () => Promise<void>;
+  handleOAuthCallback: (code: string, state: string) => Promise<void>;
 }
 
-export const useSettingsStore = create<SettingsStore>((set) => ({
+export const useSettingsStore = create<SettingsStore>((set, get) => ({
   // Initial state
   username: "",
   customInstructions: "",
@@ -47,6 +98,11 @@ export const useSettingsStore = create<SettingsStore>((set) => ({
   providers: {} as Record<ProviderType, ProviderConfig>,
   ollamaHealth: false,
   ollamaModels: [],
+  connectedMCPs: [],
+  searchResults: [],
+  isSearching: false,
+  isConnecting: false,
+  pendingOAuthSession: null,
 
   // General settings methods
   loadSettings: async () => {
@@ -135,6 +191,105 @@ export const useSettingsStore = create<SettingsStore>((set) => ({
     } catch (error) {
       console.error("Failed to load Ollama models:", error);
       set({ ollamaModels: [] });
+    }
+  },
+
+  // MCP methods
+  searchMCPs: async (term: string) => {
+    set({ isSearching: true });
+    try {
+      const results = await window.electronAPI.searchMCPServers(term);
+      set({ searchResults: results, isSearching: false });
+    } catch (error) {
+      console.error("Failed to search MCPs:", error);
+      set({ searchResults: [], isSearching: false });
+    }
+  },
+
+  connectMCP: async (serverConfig: SmitheryServer) => {
+    set({ isConnecting: true });
+    try {
+      console.log("Initiating connection to:", serverConfig.qualifiedName);
+
+      const result = await window.electronAPI.connectMCPServer({
+        namespace: serverConfig.qualifiedName,
+        qualifiedName: serverConfig.qualifiedName,
+        displayName: serverConfig.displayName,
+        iconUrl: serverConfig.iconUrl || "",
+      });
+
+      if (result.needsAuth) {
+        console.log("OAuth authentication required - browser should have opened");
+
+        // Store server metadata for when OAuth callback comes
+        set({
+          pendingOAuthSession: {
+            sessionId: result.serverMetadata.namespace, // Use namespace as session ID
+            serverMetadata: result.serverMetadata,
+          },
+        });
+
+        console.log("Waiting for OAuth callback...");
+        // isConnecting will be set to false in handleOAuthCallback
+      } else if (result.success) {
+        console.log("Connected successfully without OAuth!");
+        set({ isConnecting: false });
+        await get().loadConnectedMCPs();
+      } else {
+        throw new Error("Connection failed");
+      }
+    } catch (error) {
+      console.error("Failed to connect MCP:", error);
+      set({ isConnecting: false, pendingOAuthSession: null });
+      throw error;
+    }
+  },
+
+  handleOAuthCallback: async (code: string, state: string) => {
+    console.log("handleOAuthCallback called with code:", code.substring(0, 10) + "...", "state:", state);
+
+    const session = get().pendingOAuthSession;
+    if (!session) {
+      console.error("No pending OAuth session found");
+      set({ isConnecting: false });
+      return;
+    }
+
+    try {
+      console.log("Completing OAuth flow...");
+
+      // Complete the OAuth flow by passing the auth code to the backend
+      await window.electronAPI.finishMCPAuth(code, session.serverMetadata);
+
+      console.log("✅ OAuth completed successfully!");
+
+      // Reload connected MCPs
+      await get().loadConnectedMCPs();
+
+      // Clear pending session
+      set({ isConnecting: false, pendingOAuthSession: null });
+    } catch (error) {
+      console.error("❌ Failed to complete OAuth:", error);
+      set({ isConnecting: false, pendingOAuthSession: null });
+    }
+  },
+
+  disconnectMCP: async (namespace: string) => {
+    try {
+      await window.electronAPI.disconnectMCPServer(namespace);
+      await get().loadConnectedMCPs();
+    } catch (error) {
+      console.error("Failed to disconnect MCP:", error);
+    }
+  },
+
+  loadConnectedMCPs: async () => {
+    try {
+      const mcps = await window.electronAPI.listConnectedMCPs();
+      set({ connectedMCPs: mcps });
+    } catch (error) {
+      console.error("Failed to load connected MCPs:", error);
+      set({ connectedMCPs: [] });
     }
   },
 }));
