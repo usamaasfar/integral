@@ -2,9 +2,9 @@ import path from "node:path";
 import { app, BrowserWindow } from "electron";
 import started from "electron-squirrel-startup";
 import Store from "electron-store";
-import "./main/ipc";
-import { mcpManager } from "./main/services/mcp";
-import storage from "~/main/utils/storage";
+
+import "~/main/ipc";
+import { mcpManager } from "~/main/services/mcp";
 
 // Initialize electron-store for renderer process
 Store.initRenderer();
@@ -47,7 +47,7 @@ const createWindow = () => {
   mainWindow.webContents.openDevTools();
 
   // Initialize MCP connections after window is ready
-  mainWindow.webContents.once('did-finish-load', () => {
+  mainWindow.webContents.once("did-finish-load", () => {
     mcpManager.initializeConnections();
   });
 };
