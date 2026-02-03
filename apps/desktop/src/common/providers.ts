@@ -24,8 +24,8 @@ export const PROVIDERS = [
     logo: "https://raw.githubusercontent.com/lobehub/lobe-icons/refs/heads/master/packages/static-png/dark/gemini-color.png",
   },
   {
-    type: "openai-compatible",
-    name: "openai-compatible",
+    type: "openaiCompatible",
+    name: "openaiCompatible",
     displayName: "OpenAI Compatible",
     logo: "https://raw.githubusercontent.com/lobehub/lobe-icons/refs/heads/master/packages/static-png/dark/openai.png",
   },

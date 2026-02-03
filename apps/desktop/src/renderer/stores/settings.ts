@@ -108,14 +108,14 @@ export const useSettingsStore = create<SettingsStore>((set, get) => ({
   loadSettings: async () => {
     set({ isLoading: true });
     try {
-      const settings = await window.electronAPI.getSettings();
-      const selectedProvider = await window.electronAPI.getStorage("selectedProvider");
-      set({
-        username: settings.username || "",
-        customInstructions: settings.customInstructions || "",
-        selectedProvider: selectedProvider || "ollama",
-        isLoading: false,
-      });
+      // const settings = await window.electronAPI.getSettings();
+      // const selectedProvider = await window.electronAPI.getStorage("selectedProvider");
+      // set({
+      //   username: settings.username || "",
+      //   customInstructions: settings.customInstructions || "",
+      //   selectedProvider: selectedProvider || "ollama",
+      //   isLoading: false,
+      // });
     } catch (error) {
       console.error("Failed to load settings:", error);
       set({ isLoading: false });
@@ -141,10 +141,10 @@ export const useSettingsStore = create<SettingsStore>((set, get) => ({
 
       for (const providerInfo of PROVIDERS) {
         try {
-          const config = await window.electronAPI.getProviderConfig(String(providerInfo.type));
-          if (config?.config && Object.keys(config.config).length > 0) {
-            providers[providerInfo.type] = { ...config.config, apiKey: config.apiKey };
-          }
+          // const config = await window.electronAPI.getProviderConfig(String(providerInfo.type));
+          // if (config?.config && Object.keys(config.config).length > 0) {
+          //   providers[providerInfo.type] = { ...config.config, apiKey: config.apiKey };
+          // }
         } catch (err) {
           console.error(`Failed to load config for ${providerInfo.type}:`, err);
         }

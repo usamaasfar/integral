@@ -1,11 +1,13 @@
 import { Layers, Server, Settings2, Zap } from "lucide-react";
 
 import { SettingsGeneral } from "~/renderer/components/blocks/settings-general";
+import { SettingsProviders } from "~/renderer/components/blocks/settings-providers";
+
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "~/renderer/components/ui/tabs";
 
 const SettingsScreen = () => {
   return (
-    <Tabs defaultValue="general" className="w-full h-full pt-8 pb-2.5 px-2.5">
+    <Tabs defaultValue="providers" className="w-full h-full pt-8 pb-2.5 px-2.5">
       <TabsList className="w-full">
         <TabsTrigger value="general">
           <Settings2 />
@@ -28,7 +30,7 @@ const SettingsScreen = () => {
         <SettingsGeneral />
       </TabsContent>
       <TabsContent value="providers" className="h-full">
-        <p>providers</p>
+        <SettingsProviders />
       </TabsContent>
       <TabsContent value="servers" className="h-full">
         <p>servers</p>

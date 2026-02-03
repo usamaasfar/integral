@@ -25,7 +25,7 @@ export default {
 
       const encrypted = store.get(`secure::${key}`);
       if (!encrypted) return undefined;
-      
+
       const buffer = Buffer.from(encrypted as string, "base64");
       return safeStorage.decryptString(buffer);
     },
