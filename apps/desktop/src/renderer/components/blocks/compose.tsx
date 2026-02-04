@@ -5,7 +5,7 @@ import { Avatar, AvatarFallback, AvatarGroup, AvatarImage } from "~/renderer/com
 import { Dialog, DialogContent } from "~/renderer/components/ui/dialog";
 import { Kbd, KbdGroup } from "~/renderer/components/ui/kbd";
 import { Textarea } from "~/renderer/components/ui/textarea";
-import { useServersStore, type server } from "~/renderer/stores/servers";
+import { type server, useServersStore } from "~/renderer/stores/servers";
 
 export function Compose({ onSubmit }: { onSubmit?: (prompt: string, mentions?: string[]) => Promise<any> }) {
   const [open, setOpen] = useState(false);
@@ -26,7 +26,7 @@ export function Compose({ onSubmit }: { onSubmit?: (prompt: string, mentions?: s
 
   useEffect(() => {
     const handleKeyDown = async (e: KeyboardEvent) => {
-      if (e.metaKey && e.key === "n") {
+      if (e.key === "n" && !e.metaKey && !e.ctrlKey && !e.altKey) {
         e.preventDefault();
         setValue([]);
 
@@ -43,16 +43,17 @@ export function Compose({ onSubmit }: { onSubmit?: (prompt: string, mentions?: s
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [getConnectedServers]);
 
-  const onHandleSumbit = async (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    if (e.key === "Enter" && e.metaKey) {
+  const onHandleSumbit = async (e: React.KeyboardEvent<HTMLTextAreaElement | HTMLInputElement>) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
       const prompt = (e.target as HTMLTextAreaElement).value;
       console.log("Sending prompt:", prompt);
       console.log("Value array:", value);
       console.log("Connected MCPs:", connectedMCPs);
 
       // Extract mentions from the value array (these are the @mentioned MCPs)
-      const mentions = value.map(mention => {
-        const mcp = connectedMCPs.find(m => m.displayName === mention);
+      const mentions = value.map((mention) => {
+        const mcp = connectedMCPs.find((m) => m.displayName === mention);
         return mcp?.namespace || mention.toLowerCase();
       });
 
@@ -98,7 +99,7 @@ export function Compose({ onSubmit }: { onSubmit?: (prompt: string, mentions?: s
               className="flex min-h-[60px] w-full bg-transparent px-2 py-2 text-base placeholder:text-muted-foreground focus-visible:outline-none resize-none border-none md:text-sm"
               asChild
             >
-              <Textarea />
+              <Textarea className="bg-transparent" />
             </Mention.MentionInput>
             <Mention.MentionContent className="data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 relative z-[60] min-w-[var(--dice-anchor-width)] overflow-hidden rounded-md border border-zinc-200 bg-white p-1 text-zinc-950 shadow-md data-[state=closed]:animate-out data-[state=open]:animate-in dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-50">
               {connectedMCPs.map((mcp) => (
@@ -136,7 +137,6 @@ export function Compose({ onSubmit }: { onSubmit?: (prompt: string, mentions?: s
             <div className="text-xs text-muted-foreground">
               <KbdGroup>
                 <span className="text-muted-foreground">Send</span>
-                <Kbd>⌘</Kbd>
                 <Kbd>Enter</Kbd>
               </KbdGroup>
             </div>

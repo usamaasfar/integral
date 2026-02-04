@@ -62,7 +62,6 @@ const Composer = () => {
           <div className="flex flex-col gap-2 text-xs absolute bottom-10">
             <KbdGroup>
               <span className="text-muted-foreground">Compose</span>
-              <Kbd>⌘</Kbd>
               <Kbd>N</Kbd>
             </KbdGroup>
             <KbdGroup>

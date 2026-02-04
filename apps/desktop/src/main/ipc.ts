@@ -97,10 +97,10 @@ ipcMain.on("ai-compose", async (event, prompt: string, mentions?: string[]) => {
       mcpTools = remote.getToolsFromServers(mentions);
       console.log(`Loaded ${Object.keys(mcpTools).length} MCP tools`);
     } else {
-      console.log("No mentions provided - loading all available MCP tools");
-      mcpTools = remote.getAllTools();
-      console.log(`Loaded ${Object.keys(mcpTools).length} MCP tools from all connected servers`);
+      console.log("No mentions provided - no MCP tools loaded");
     }
+
+    console.log(mentions, mcpTools);
 
     // Create composer agent with MCP tools
     const agent = composer(mcpTools);
