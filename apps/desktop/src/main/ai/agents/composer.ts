@@ -10,7 +10,6 @@ import { getModel } from "~/main/ai/providers";
  */
 function composer(mcpTools: Record<string, Tool> = {}) {
   try {
-    console.log({ mcpTools });
     const composer = new ToolLoopAgent({
       instructions: composerPrompt,
       model: getModel(),

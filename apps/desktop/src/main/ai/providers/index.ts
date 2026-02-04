@@ -10,23 +10,27 @@ const providers = {
   openai: openaiProvider,
   anthropic: anthropicProvider,
   google: googleProvider,
-  "openai-compatible": openaiCompatibleProvider,
+  openaiCompatible: openaiCompatibleProvider,
 };
 
 export const getModel = () => {
   const selectedProvider = storage.store.get("selectedProvider", "ollama") as keyof typeof providers;
-  const providerConfig = storage.store.get(`${selectedProvider}-provider-config`) as {
-    provider: keyof typeof providers;
-    model: string;
-  };
+  const providerConfigString = storage.secureStore.get(`provider::${selectedProvider}`);
 
-  console.log("🔍 Debug getModel:", { selectedProvider, providerConfig });
-  console.log("🔍 Available providers:", Object.keys(providers));
-
-  if (!providers[providerConfig.provider]) {
-    console.error(`❌ Provider '${providerConfig.provider}' not found in providers object`);
-    throw new Error(`Provider '${providerConfig.provider}' is not supported`);
+  if (!providerConfigString) {
+    throw new Error(`Provider config for '${selectedProvider}' is not configured`);
   }
 
-  return providers[providerConfig.provider](providerConfig.model);
+  const providerConfig = JSON.parse(providerConfigString) as {
+    model: string;
+    apiKey?: string;
+    name?: string;
+    baseUrl?: string;
+  };
+
+  if (!providers[selectedProvider]) {
+    throw new Error(`Provider '${selectedProvider}' is not supported`);
+  }
+
+  return providers[selectedProvider](providerConfig.model);
 };

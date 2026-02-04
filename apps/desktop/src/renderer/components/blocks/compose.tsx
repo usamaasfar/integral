@@ -1,16 +1,16 @@
 import * as Mention from "@diceui/mention";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { Avatar, AvatarFallback, AvatarGroup, AvatarImage } from "~/renderer/components/ui/avatar";
 import { Dialog, DialogContent } from "~/renderer/components/ui/dialog";
 import { Kbd, KbdGroup } from "~/renderer/components/ui/kbd";
-import { Textarea } from "~/renderer/components/ui/textarea";
 import { type server, useServersStore } from "~/renderer/stores/servers";
 
 export function Compose({ onSubmit }: { onSubmit?: (prompt: string, mentions?: string[]) => Promise<any> }) {
   const [open, setOpen] = useState(false);
   const [value, setValue] = useState<string[]>([]);
   const [connectedMCPs, setConnectedMCPs] = useState<(server & { connected: boolean })[]>([]);
+  const isTabCompletion = useRef(false);
 
   const { getConnectedServers } = useServersStore();
 
@@ -44,20 +44,36 @@ export function Compose({ onSubmit }: { onSubmit?: (prompt: string, mentions?: s
   }, [getConnectedServers]);
 
   const onHandleSumbit = async (e: React.KeyboardEvent<HTMLTextAreaElement | HTMLInputElement>) => {
-    if (e.key === "Enter" && !e.shiftKey) {
+    // Tab: Autocomplete mention (dispatch Enter to select from dropdown)
+    if (e.key === "Tab") {
+      e.preventDefault();
+      isTabCompletion.current = true;
+      const target = e.target as HTMLTextAreaElement;
+      target.dispatchEvent(
+        new KeyboardEvent("keydown", {
+          key: "Enter",
+          code: "Enter",
+          bubbles: true,
+          cancelable: true,
+        }),
+      );
+      // Reset flag after a tick
+      setTimeout(() => {
+        isTabCompletion.current = false;
+      }, 0);
+      return;
+    }
+
+    // Enter: Send message (but not if triggered by Tab completion)
+    if (e.key === "Enter" && !e.shiftKey && !isTabCompletion.current) {
       e.preventDefault();
       const prompt = (e.target as HTMLTextAreaElement).value;
-      console.log("Sending prompt:", prompt);
-      console.log("Value array:", value);
-      console.log("Connected MCPs:", connectedMCPs);
 
       // Extract mentions from the value array (these are the @mentioned MCPs)
       const mentions = value.map((mention) => {
         const mcp = connectedMCPs.find((m) => m.displayName === mention);
         return mcp?.namespace || mention.toLowerCase();
       });
-
-      console.log("Extracted mentions:", mentions);
 
       try {
         if (onSubmit) {
@@ -71,12 +87,6 @@ export function Compose({ onSubmit }: { onSubmit?: (prompt: string, mentions?: s
       }
 
       setOpen(false);
-    }
-    if (e.key === "Tab") {
-      e.preventDefault();
-      // Create and dispatch a proper Enter event
-      const target = e.target as HTMLTextAreaElement;
-      target.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", code: "Enter", bubbles: true, cancelable: true }));
     }
   };
 
@@ -99,7 +109,7 @@ export function Compose({ onSubmit }: { onSubmit?: (prompt: string, mentions?: s
               className="flex min-h-[60px] w-full bg-transparent px-2 py-2 text-base placeholder:text-muted-foreground focus-visible:outline-none resize-none border-none md:text-sm"
               asChild
             >
-              <Textarea className="bg-transparent" />
+              <textarea />
             </Mention.MentionInput>
             <Mention.MentionContent className="data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 relative z-[60] min-w-[var(--dice-anchor-width)] overflow-hidden rounded-md border border-zinc-200 bg-white p-1 text-zinc-950 shadow-md data-[state=closed]:animate-out data-[state=open]:animate-in dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-50">
               {connectedMCPs.map((mcp) => (
