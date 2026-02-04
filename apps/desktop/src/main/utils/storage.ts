@@ -12,6 +12,9 @@ export default {
     get: (key: string, defaultValue?: JsonValue) => {
       return store.get(key, defaultValue);
     },
+    delete: (key: string) => {
+      store.delete(key);
+    },
   },
   secureStore: {
     set: (key: string, value: string) => {
@@ -28,6 +31,9 @@ export default {
 
       const buffer = Buffer.from(encrypted as string, "base64");
       return safeStorage.decryptString(buffer);
+    },
+    delete: (key: string) => {
+      store.delete(`secure::${key}`);
     },
   },
 };

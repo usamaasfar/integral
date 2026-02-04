@@ -1,7 +1,7 @@
 import { ipcMain, shell } from "electron";
 
 import composer from "~/main/ai/agents/composer";
-import { mcpManager } from "~/main/services/mcp";
+import remote from "~/main/mcp/remote";
 import ollama from "~/main/services/ollama";
 import smitheryService from "~/main/services/smithery";
 import storage from "~/main/utils/storage";
@@ -41,6 +41,47 @@ ipcMain.handle("search-remote-mcp-servers", async (_event, term: string) => {
   }
 });
 
+ipcMain.handle("connect-remote-mcp-server", async (_event, namespace: string) => {
+  try {
+    const result = await remote.connectServer(namespace);
+
+    if (result.needsAuth) return { success: false, needsAuth: true, namespace };
+    else return { success: true, tools: Object.keys(result.tools || {}) };
+  } catch (error) {
+    console.error("Error connecting to remote MCP:", error);
+    throw error;
+  }
+});
+
+ipcMain.handle("disconnect-mcp-server", async (_event, namespace: string) => {
+  try {
+    await remote.disconnectServer(namespace);
+    return { success: true };
+  } catch (error) {
+    console.error("MCP disconnect error:", error);
+    throw error;
+  }
+});
+
+ipcMain.handle("list-connected-mcps", async () => {
+  try {
+    return remote.listConnectedServers();
+  } catch (error) {
+    console.error("MCP list error:", error);
+    throw error;
+  }
+});
+
+ipcMain.handle("complete-mcp-oauth", async (_event, namespace: string, authCode: string) => {
+  try {
+    const result = await remote.completeOAuth(namespace, authCode);
+    return result;
+  } catch (error) {
+    console.error("OAuth completion error:", error);
+    throw error;
+  }
+});
+
 // AI Composer handler
 ipcMain.on("ai-compose", async (event, prompt: string, mentions?: string[]) => {
   try {
@@ -50,7 +91,8 @@ ipcMain.on("ai-compose", async (event, prompt: string, mentions?: string[]) => {
     let mcpTools = {};
     if (mentions && mentions.length > 0) {
       console.log(`📦 Loading tools for mentions: ${mentions.join(", ")}`);
-      mcpTools = mcpManager.getToolsForMentions(mentions);
+      // TODO: Update to use remote.ts instead of mcpManager
+      // mcpTools = mcpManager.getToolsForMentions(mentions);
       console.log(`✅ Loaded ${Object.keys(mcpTools).length} MCP tools`);
     } else {
       console.log(`⚠️ No mentions provided - only static tools will be available`);
@@ -74,90 +116,6 @@ ipcMain.on("ai-compose", async (event, prompt: string, mentions?: string[]) => {
   } catch (error) {
     console.error("AI Error:", error);
     event.reply("ai-error", error.message);
-  }
-});
-
-ipcMain.handle("connect-mcp-server", async (_event, serverConfig: any) => {
-  try {
-    // Use qualifiedName for both namespace and server URL (as per Smithery docs)
-    const namespace = serverConfig.qualifiedName || serverConfig.namespace;
-    const serverUrl = `https://server.smithery.ai/${namespace}`;
-    const displayName = serverConfig.displayName;
-    const iconUrl = serverConfig.iconUrl || "";
-
-    console.log("Connecting to MCP server:", { namespace, serverUrl, displayName });
-
-    // Try to connect (may return needsAuth if OAuth is required)
-    const result = await mcpManager.connectToMCP(namespace, serverUrl, displayName, iconUrl);
-
-    if (result.needsAuth) {
-      // OAuth is required - return that we need auth
-      // The AI SDK will have opened the browser already via redirectToAuthorization
-      return {
-        needsAuth: true,
-        serverMetadata: {
-          namespace,
-          displayName,
-          iconUrl,
-          serverUrl,
-        },
-      };
-    }
-
-    // Connection succeeded
-    return {
-      success: true,
-      serverMetadata: {
-        namespace,
-        displayName,
-        iconUrl,
-        serverUrl,
-      },
-    };
-  } catch (error) {
-    console.error("MCP connect error:", error);
-    throw error;
-  }
-});
-
-ipcMain.handle("finish-mcp-auth", async (_event, authCode: string, serverMetadata: any) => {
-  try {
-    const { namespace, serverUrl, displayName, iconUrl } = serverMetadata;
-    console.log("Finishing OAuth for:", { namespace, serverUrl });
-
-    const result = await mcpManager.finishOAuth(namespace, serverUrl, authCode, {
-      displayName,
-      iconUrl,
-    });
-
-    if (result.success) {
-      console.log("OAuth completed successfully");
-      return { success: true };
-    } else {
-      throw new Error(result.error || "OAuth failed");
-    }
-  } catch (error) {
-    console.error("MCP auth finish error:", error);
-    throw error;
-  }
-});
-
-ipcMain.handle("disconnect-mcp-server", async (_event, namespace: string) => {
-  try {
-    await mcpManager.disconnectMCP(namespace);
-    return { success: true };
-  } catch (error) {
-    console.error("MCP disconnect error:", error);
-    throw error;
-  }
-});
-
-ipcMain.handle("list-connected-mcps", async () => {
-  try {
-    return mcpManager.listConnectedServers();
-  } catch (error) {
-    console.error("MCP list error:", error);
-    throw error;
   }
 });
 

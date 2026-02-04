@@ -1,160 +1,370 @@
-import { BadgeCheck, Search } from "lucide-react";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { BadgeCheck, ExternalLink, LoaderCircle, Search, Server, X } from "lucide-react";
 import { useEffect, useState } from "react";
+import { Controller, useForm } from "react-hook-form";
+import * as z from "zod";
 
 import { Avatar, AvatarFallback, AvatarImage } from "~/renderer/components/ui/avatar";
+import { Badge } from "~/renderer/components/ui/badge";
+import { Button } from "~/renderer/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader } from "~/renderer/components/ui/card";
-import { Input } from "~/renderer/components/ui/input";
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "~/renderer/components/ui/dialog";
+import { FieldGroup } from "~/renderer/components/ui/field";
+import { InputGroup, InputGroupAddon, InputGroupInput } from "~/renderer/components/ui/input-group";
 import { ScrollArea } from "~/renderer/components/ui/scroll-area";
-import { useSettingsStore } from "~/renderer/stores/settings";
+import { useServersStore } from "~/renderer/stores/servers";
 
-export const SettingsServersRemote = () => {
-  const [searchTerm, setSearchTerm] = useState("");
+const formSchema = z.object({ term: z.string() });
 
-  const {
-    connectedMCPs,
-    searchResults,
-    isSearching,
-    isConnecting,
-    searchMCPs,
-    connectMCP,
-    disconnectMCP,
-    loadConnectedMCPs,
-    handleOAuthCallback,
-  } = useSettingsStore();
+export const SettingsRemoteServers = () => {
+  const { getRemoteMCPSearchResults, isSearchingRemoteMCP, loadConnectedServers } = useServersStore();
+
+  const form = useForm<z.infer<typeof formSchema>>({ resolver: zodResolver(formSchema), defaultValues: { term: "" } });
 
   useEffect(() => {
-    loadConnectedMCPs();
-  }, [loadConnectedMCPs]);
+    loadConnectedServers();
+  }, [loadConnectedServers]);
 
-  // Set up OAuth callback listener
   useEffect(() => {
-    const handleCallback = (data: { code: string; state: string }) => {
+    const subscription = form.watch((value) => {
+      if (value.term) getRemoteMCPSearchResults(value.term);
+    });
+    return () => subscription.unsubscribe();
+  }, [form, getRemoteMCPSearchResults]);
+
+  useEffect(() => {
+    const handleOAuthCallback = async (data: { code: string; state: string }) => {
       console.log("OAuth callback received:", data);
-      handleOAuthCallback(data.code, data.state);
-    };
 
-    window.electronAPI.onMCPOAuthCallback(handleCallback);
+      const pendingNamespace = localStorage.getItem("mcp-pending-oauth-namespace");
+      const pendingDisplayName = localStorage.getItem("mcp-pending-oauth-displayname");
+      const pendingIconUrl = localStorage.getItem("mcp-pending-oauth-iconurl");
 
-    return () => {
-      // Clean up listener on unmount
-      window.electronAPI.removeAllOAuthListeners();
-    };
-  }, [handleOAuthCallback]);
-
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      if (searchTerm.trim()) {
-        searchMCPs(searchTerm);
+      if (!pendingNamespace) {
+        console.warn("OAuth callback received but no pending namespace");
+        return;
       }
-    }, 300);
 
-    return () => clearTimeout(timer);
-  }, [searchTerm, searchMCPs]);
+      try {
+        console.log(`Completing OAuth for ${pendingDisplayName || pendingNamespace} with code ${data.code.substring(0, 10)}...`);
+        const result = await window.electronAPI.completeMCPOAuth(pendingNamespace, data.code);
 
-  const handleSearch = (term: string) => {
-    setSearchTerm(term);
-  };
+        if (result.success) {
+          const { connectRemoteMCPServer } = useServersStore.getState();
+          await connectRemoteMCPServer(pendingNamespace, {
+            displayName: pendingDisplayName || undefined,
+            iconUrl: pendingIconUrl || undefined,
+          });
 
-  const handleConnect = async (server: any) => {
-    await connectMCP(server);
-  };
+          alert(`Successfully connected to ${pendingDisplayName || pendingNamespace}!`);
+          loadConnectedServers();
+        } else {
+          alert(`Failed to complete OAuth for ${pendingDisplayName || pendingNamespace}`);
+        }
+      } catch (error: any) {
+        console.error("OAuth completion error:", error);
+        alert(`OAuth error: ${error.message}`);
+      } finally {
+        localStorage.removeItem("mcp-pending-oauth-namespace");
+        localStorage.removeItem("mcp-pending-oauth-displayname");
+        localStorage.removeItem("mcp-pending-oauth-iconurl");
+      }
+    };
 
-  const handleDisconnect = async (namespace: string) => {
-    await disconnectMCP(namespace);
-  };
+    window.electronAPI.onMCPOAuthCallback(handleOAuthCallback);
+  }, []);
 
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter" && searchTerm.trim()) {
-      handleSearch(searchTerm);
-    }
-  };
-
-  const showSearchResults = searchTerm.length > 0;
+  function onSubmit(data: z.infer<typeof formSchema>) {
+    console.log(data);
+  }
 
   return (
-    <Card className="h-full flex flex-col rounded-t-none">
-      <CardHeader className="flex-shrink-0">
-        <CardDescription>{showSearchResults ? "Discover and connect MCP servers" : "Manage your connected MCP servers"}</CardDescription>
+    <Card className="relative h-full flex flex-col rounded-t-none">
+      <CardHeader>
+        <CardDescription>Discover and connect MCP servers</CardDescription>
       </CardHeader>
-      <CardContent className="flex-1 flex flex-col space-y-4">
-        {/* Search Input */}
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="Discover MCP servers..."
-            value={searchTerm}
-            onChange={(e) => handleSearch(e.target.value)}
-            onKeyDown={handleKeyDown}
-            className="pl-10"
-          />
-        </div>
-
-        {/* Content Area */}
-        <ScrollArea className="flex-1">
-          {showSearchResults ? (
-            /* Search Results */
-            <div className="space-y-3">
-              {isSearching ? (
-                <div className="text-center text-muted-foreground">Searching...</div>
-              ) : (
-                searchResults.map((server, index) => (
-                  <div
-                    key={server.id || `server-${index}`}
-                    className="flex items-center space-x-3 p-3 rounded-lg border hover:bg-accent cursor-pointer transition-colors"
-                    onClick={() => handleConnect(server)}
-                  >
-                    <Avatar className="h-8 w-8">
-                      <AvatarImage src={server.iconUrl} alt={server.displayName} />
-                      <AvatarFallback>{server.displayName.charAt(0)}</AvatarFallback>
-                    </Avatar>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center space-x-2">
-                        <p className="text-sm font-medium truncate">{server.displayName}</p>
-                        {server.verified && <BadgeCheck className="h-4 w-4 text-blue-500" />}
-                      </div>
-                      <p className="text-xs text-muted-foreground truncate">{server.description}</p>
-                    </div>
-                  </div>
-                ))
-              )}
-            </div>
-          ) : (
-            /* Connected MCPs */
-            <div className="space-y-3">
-              {connectedMCPs.map((mcp) => (
-                <div key={mcp.namespace} className="flex items-center space-x-3 p-3 rounded-lg border">
-                  <Avatar className="h-8 w-8 rounded-lg p-0.5">
-                    <AvatarImage src={mcp.iconUrl} alt={mcp.displayName} />
-                    <AvatarFallback>{mcp.displayName.charAt(0)}</AvatarFallback>
-                  </Avatar>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center space-x-2">
-                      <p className="text-sm font-medium truncate">{mcp.displayName}</p>
-                      <div className="h-2 w-2 bg-green-500 rounded-full" title="Connected" />
-                    </div>
-                  </div>
-                  <button
-                    className="text-xs text-muted-foreground hover:text-foreground transition-colors"
-                    onClick={() => handleDisconnect(mcp.namespace)}
-                    disabled={isConnecting}
-                  >
-                    Disconnect
-                  </button>
-                </div>
-              ))}
-            </div>
-          )}
-        </ScrollArea>
-
-        {/* Helper Text */}
-        <div className="text-xs text-muted-foreground text-center">
-          {showSearchResults
-            ? isConnecting
-              ? "Connecting..."
-              : "Click to connect to a server"
-            : `${connectedMCPs.length} server${connectedMCPs.length !== 1 ? "s" : ""} connected`}
-        </div>
-      </CardContent>
+      <ScrollArea className="flex-1 h-0">
+        <CardContent>
+          <form onSubmit={form.handleSubmit(onSubmit)}>
+            <FieldGroup>
+              <Controller
+                name="term"
+                control={form.control}
+                render={({ field }) => (
+                  <InputGroup>
+                    <InputGroupAddon>
+                      {isSearchingRemoteMCP && form.watch("term") ? (
+                        <LoaderCircle className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <Search className="h-4 w-4" />
+                      )}
+                    </InputGroupAddon>
+                    <InputGroupInput {...field} placeholder="Search MCP servers..." />
+                    {field.value && (
+                      <InputGroupAddon align="inline-end">
+                        <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => field.onChange("")}>
+                          <X className="h-4 w-4" />
+                        </Button>
+                      </InputGroupAddon>
+                    )}
+                  </InputGroup>
+                )}
+              />
+            </FieldGroup>
+          </form>
+          <div className="mt-4">{form.watch("term") ? <SearchRemoteMCPServers /> : <ConnectedRemoteMCPServers />}</div>
+        </CardContent>
+      </ScrollArea>
     </Card>
+  );
+};
+
+const SearchRemoteMCPServers = () => {
+  const { remoteMCPSearchResults, isSearchingRemoteMCP, connectRemoteMCPServer, isConnecting, connectedServers, disconnectMCPServer } =
+    useServersStore();
+  const [connectingServer, setConnectingServer] = useState<string | null>(null);
+  const [disconnectingServer, setDisconnectingServer] = useState<string | null>(null);
+
+  if (!isSearchingRemoteMCP)
+    return (
+      <div className="">
+        {remoteMCPSearchResults.length === 0 ? (
+          <div className="text-sm text-muted-foreground py-4">{isSearchingRemoteMCP ? "Searching..." : "No results found"}</div>
+        ) : (
+          <div>
+            {remoteMCPSearchResults.map((server) => (
+              <Dialog key={server.id}>
+                <DialogTrigger asChild>
+                  <div className="h-11 flex items-center gap-2 p-2 rounded-md hover:bg-accent">
+                    <Avatar className="h-5 w-5 rounded-xs">
+                      <AvatarImage src={server.iconUrl || undefined} alt={server.displayName} />
+                      <AvatarFallback>
+                        <Server className="h-4 w-4" />
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="flex items-center gap-2 flex-1 min-w-0">
+                      <p>{server.displayName}</p>
+                      {connectedServers.some((s) => s.namespace === server.namespace) && (
+                        <Badge variant="secondary" className="gap-1 bg-blue-600">
+                          Installed
+                        </Badge>
+                      )}
+                      {server.verified && (
+                        <Badge variant="secondary" className="gap-1 bg-green-600">
+                          <BadgeCheck className="h-3 w-3" />
+                          Verified
+                        </Badge>
+                      )}
+                    </div>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-7 w-7"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        window.electronAPI.openExternalLink(server.homepage);
+                      }}
+                    >
+                      <ExternalLink className="h-3 w-3" />
+                    </Button>
+                  </div>
+                </DialogTrigger>
+
+                <DialogContent showCloseButton={false} className="max-w-md">
+                  <DialogHeader>
+                    <DialogTitle className="flex justify-between">
+                      <div className="flex items-center gap-2">
+                        <Avatar className="h-7 w-7 rounded-xs">
+                          <AvatarImage src={server.iconUrl || undefined} alt={server.displayName} />
+                          <AvatarFallback>
+                            <Server className="h-7 w-7" />
+                          </AvatarFallback>
+                        </Avatar>
+
+                        {server.displayName}
+                        {server.verified && (
+                          <Badge variant="secondary" className="gap-1 bg-green-600">
+                            <BadgeCheck className="h-3 w-3" />
+                            Verified
+                          </Badge>
+                        )}
+                      </div>
+
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-7 w-7"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          window.electronAPI.openExternalLink(server.homepage);
+                        }}
+                      >
+                        <ExternalLink className="h-3 w-3" />
+                      </Button>
+                    </DialogTitle>
+                  </DialogHeader>
+
+                  <div className="space-y-4">
+                    <div>
+                      <h4 className="text-sm font-medium mb-1">Description</h4>
+                      <p className="text-sm text-muted-foreground">{server.description}</p>
+                    </div>
+                  </div>
+
+                  <DialogFooter className="w-full flex gap-2">
+                    <DialogClose asChild>
+                      <Button variant="outline" className="flex-1">
+                        Close
+                      </Button>
+                    </DialogClose>
+
+                    {connectedServers.some((s) => s.namespace === server.namespace) ? (
+                      <Button
+                        variant="destructive"
+                        className="flex-1"
+                        disabled={disconnectingServer === server.namespace}
+                        onClick={async () => {
+                          if (!server.namespace) return;
+
+                          setDisconnectingServer(server.namespace);
+                          try {
+                            await disconnectMCPServer(server.namespace);
+                            console.log(`Disconnected from ${server.displayName}`);
+                          } catch (error: any) {
+                            console.error("Disconnect error:", error);
+                            alert(`Error disconnecting from ${server.displayName}: ${error.message}`);
+                          } finally {
+                            setDisconnectingServer(null);
+                          }
+                        }}
+                      >
+                        {disconnectingServer === server.namespace ? (
+                          <>
+                            <LoaderCircle className="h-4 w-4 animate-spin mr-2" />
+                            Disconnecting...
+                          </>
+                        ) : (
+                          "Disconnect"
+                        )}
+                      </Button>
+                    ) : (
+                      <Button
+                        className="flex-1"
+                        disabled={isConnecting || connectingServer === server.namespace}
+                        onClick={async () => {
+                          if (!server.namespace) return;
+
+                          setConnectingServer(server.namespace);
+                          try {
+                            const result = await connectRemoteMCPServer(server.namespace, {
+                              displayName: server.displayName,
+                              iconUrl: server.iconUrl || undefined,
+                            });
+
+                            if (result.needsAuth) {
+                              localStorage.setItem("mcp-pending-oauth-namespace", server.namespace);
+                              localStorage.setItem("mcp-pending-oauth-displayname", server.displayName);
+                              localStorage.setItem("mcp-pending-oauth-iconurl", server.iconUrl || "");
+                              alert(
+                                `OAuth Required\n\nA browser window has been opened for authorization.\n\nPlease authorize ${server.displayName} in your browser.\n\nThe connection will complete automatically after authorization.`,
+                              );
+                            } else if (result.success) {
+                              console.log(`Successfully connected to ${server.displayName}`);
+                            } else {
+                              alert(`Failed to connect to ${server.displayName}`);
+                            }
+                          } catch (error: any) {
+                            console.error("Connection error:", error);
+                            alert(`Error connecting to ${server.displayName}: ${error.message}`);
+                          } finally {
+                            setConnectingServer(null);
+                          }
+                        }}
+                      >
+                        {connectingServer === server.namespace ? (
+                          <>
+                            <LoaderCircle className="h-4 w-4 animate-spin mr-2" />
+                            Connecting...
+                          </>
+                        ) : (
+                          "Install"
+                        )}
+                      </Button>
+                    )}
+                  </DialogFooter>
+                </DialogContent>
+              </Dialog>
+            ))}
+          </div>
+        )}
+      </div>
+    );
+};
+
+const ConnectedRemoteMCPServers = () => {
+  const { connectedServers, disconnectMCPServer } = useServersStore();
+  const [disconnecting, setDisconnecting] = useState<string | null>(null);
+
+  if (connectedServers.length === 0) {
+    return (
+      <div className="text-center py-8">
+        <Server className="h-12 w-12 mx-auto text-muted-foreground/50 mb-2" />
+        <p className="text-sm text-muted-foreground">No connected servers</p>
+        <p className="text-xs text-muted-foreground mt-1">Search above to discover and connect MCP servers</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-2">
+      <p className="text-sm font-medium mb-3">Connected Servers</p>
+      {connectedServers.map((server) => (
+        <div key={server.namespace} className="flex items-center justify-between p-3 border rounded-md">
+          <div className="flex items-center gap-3">
+            <Avatar className="h-8 w-8 rounded-xs">
+              {server.iconUrl && <AvatarImage src={server.iconUrl} alt={server.displayName || server.namespace} />}
+              <AvatarFallback>
+                <Server className="h-4 w-4" />
+              </AvatarFallback>
+            </Avatar>
+            <div>
+              <p className="text-sm font-medium">{server.displayName || server.namespace}</p>
+              {server.tools && <p className="text-xs text-muted-foreground">{server.tools.length} tools available</p>}
+            </div>
+          </div>
+          <Button
+            variant="outline"
+            size="sm"
+            disabled={disconnecting === server.namespace}
+            onClick={async () => {
+              setDisconnecting(server.namespace);
+              try {
+                await disconnectMCPServer(server.namespace);
+              } catch (error) {
+                console.error("Failed to disconnect:", error);
+              }
+              setDisconnecting(null);
+            }}
+          >
+            {disconnecting === server.namespace ? (
+              <>
+                <LoaderCircle className="h-3 w-3 animate-spin mr-2" />
+                Disconnecting...
+              </>
+            ) : (
+              "Disconnect"
+            )}
+          </Button>
+        </div>
+      ))}
+    </div>
   );
 };

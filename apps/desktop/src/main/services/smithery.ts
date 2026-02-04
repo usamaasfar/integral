@@ -14,7 +14,6 @@ export default {
   },
   searchServers: async (term: string) => {
     try {
-      console.log("called... with", term);
       const response = await client.servers.list({ q: term, pageSize: 5 });
       return response.servers;
     } catch (error) {

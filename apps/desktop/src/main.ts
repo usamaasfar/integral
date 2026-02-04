@@ -4,7 +4,7 @@ import started from "electron-squirrel-startup";
 import Store from "electron-store";
 
 import "~/main/ipc";
-import { mcpManager } from "~/main/services/mcp";
+import remote from "~/main/mcp/remote";
 
 // Initialize electron-store for renderer process
 Store.initRenderer();
@@ -47,8 +47,8 @@ const createWindow = () => {
   mainWindow.webContents.openDevTools();
 
   // Initialize MCP connections after window is ready
-  mainWindow.webContents.once("did-finish-load", () => {
-    mcpManager.initializeConnections();
+  mainWindow.webContents.once("did-finish-load", async () => {
+    await remote.reconnectAll();
   });
 };
 

@@ -1,3 +1,10 @@
+export interface MCPConnectionResult {
+  success: boolean;
+  needsAuth?: boolean;
+  namespace?: string;
+  tools?: string[];
+}
+
 export interface ElectronAPI {
   // Storage
   setStorage: (key: string, value: any) => Promise<boolean>;
@@ -9,14 +16,13 @@ export interface ElectronAPI {
   getOllamaHealth: () => Promise<boolean>;
   getOllamaModels: () => Promise<string[]>;
 
-  // Servers
+  // MCP Remote Servers
   searchRemoteMCPServers: (term: string) => Promise<any>;
-
-  // // AI Composition
-  // aiCompose: (prompt: string, mentions?: string[]) => Promise<any>;
-  // onAIStep: (callback: (step: any) => void) => void;
-  // onAIComplete: (callback: (result: any) => void) => void;
-  // onAIError: (callback: (error: any) => void) => void;
+  connectRemoteMCPServer: (namespace: string) => Promise<MCPConnectionResult>;
+  disconnectMCPServer: (namespace: string) => Promise<{ success: boolean }>;
+  listConnectedMCPs: () => Promise<string[]>;
+  completeMCPOAuth: (namespace: string, authCode: string) => Promise<MCPConnectionResult>;
+  onMCPOAuthCallback: (callback: (data: { code: string; state: string }) => void) => void;
 
   // System
   openExternalLink: (url: string) => Promise<void>;

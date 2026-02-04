@@ -1,4 +1,4 @@
-import { SettingsRemoteServers } from "~/renderer/components/blocks/settings-servers-remote-2";
+import { SettingsRemoteServers } from "~/renderer/components/blocks/settings-servers-remote";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "~/renderer/components/ui/tabs";
 
 export const SettingsServers = () => {
