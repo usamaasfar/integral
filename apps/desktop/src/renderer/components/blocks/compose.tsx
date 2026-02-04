@@ -5,30 +5,43 @@ import { Avatar, AvatarFallback, AvatarGroup, AvatarImage } from "~/renderer/com
 import { Dialog, DialogContent } from "~/renderer/components/ui/dialog";
 import { Kbd, KbdGroup } from "~/renderer/components/ui/kbd";
 import { Textarea } from "~/renderer/components/ui/textarea";
-import { useSettingsStore } from "~/renderer/stores/settings";
+import { useServersStore, type server } from "~/renderer/stores/servers";
 
 export function Compose({ onSubmit }: { onSubmit?: (prompt: string, mentions?: string[]) => Promise<any> }) {
   const [open, setOpen] = useState(false);
   const [value, setValue] = useState<string[]>([]);
+  const [connectedMCPs, setConnectedMCPs] = useState<(server & { connected: boolean })[]>([]);
 
-  const { connectedMCPs, loadConnectedMCPs } = useSettingsStore();
-
-  useEffect(() => {
-    loadConnectedMCPs();
-  }, [loadConnectedMCPs]);
+  const { getConnectedServers } = useServersStore();
 
   useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
+    const loadServers = async () => {
+      const servers = await getConnectedServers();
+      // Convert Record to Array and filter only connected servers
+      const connectedArray = Object.values(servers).filter((server) => server.connected);
+      setConnectedMCPs(connectedArray);
+    };
+    loadServers();
+  }, [getConnectedServers]);
+
+  useEffect(() => {
+    const handleKeyDown = async (e: KeyboardEvent) => {
       if (e.metaKey && e.key === "n") {
         e.preventDefault();
         setValue([]);
+
+        // Reload servers before opening
+        const servers = await getConnectedServers();
+        const connectedArray = Object.values(servers).filter((server) => server.connected);
+        setConnectedMCPs(connectedArray);
+
         setOpen(true);
       }
     };
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, []);
+  }, [getConnectedServers]);
 
   const onHandleSumbit = async (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === "Enter" && e.metaKey) {

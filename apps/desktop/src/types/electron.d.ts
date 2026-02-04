@@ -26,6 +26,12 @@ export interface ElectronAPI {
   completeMCPOAuth: (namespace: string, authCode: string) => Promise<MCPConnectionResult>;
   onMCPOAuthCallback: (callback: (data: { code: string; state: string }) => void) => void;
 
+  // AI Composer
+  aiCompose: (prompt: string, mentions?: string[]) => void;
+  onAIStep: (callback: (step: any) => void) => void;
+  onAIComplete: (callback: (result: any) => void) => void;
+  onAIError: (callback: (error: any) => void) => void;
+
   // System
   openExternalLink: (url: string) => Promise<void>;
 }

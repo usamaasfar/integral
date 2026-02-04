@@ -310,4 +310,63 @@ export default {
 
     console.log(`Reconnection complete: ${connectionClients.size}/${namespaces.length} servers connected`);
   },
+
+  /**
+   * Get all tools from connected MCP servers
+   * Returns: Object with tools from all connected servers
+   */
+  async getAllTools() {
+    const allTools: Record<string, any> = {};
+
+    for (const [namespace, client] of connectionClients.entries()) {
+      try {
+        if (client && typeof client.tools === "function") {
+          // Call the tools() method to get tools from this MCP client
+          const clientTools = await client.tools();
+          console.log(`Loading tools from ${namespace}:`, Object.keys(clientTools).length);
+
+          // Merge tools from this server
+          Object.assign(allTools, clientTools);
+        }
+      } catch (error) {
+        console.error(`Failed to get tools from ${namespace}:`, error);
+      }
+    }
+
+    console.log(`Total MCP tools available: ${Object.keys(allTools).length}`);
+    return allTools;
+  },
+
+  /**
+   * Get tools from specific MCP servers by namespace
+   * @param namespaces - Array of namespaces to get tools from (e.g., ['gmail', 'linear'])
+   * Returns: Object with tools from specified servers
+   */
+  async getToolsFromServers(namespaces: string[]) {
+    const tools: Record<string, any> = {};
+
+    for (const namespace of namespaces) {
+      const client = connectionClients.get(namespace);
+
+      if (client) {
+        try {
+          if (typeof client.tools === "function") {
+            // Call the tools() method to get tools from this MCP client
+            const clientTools = await client.tools();
+            console.log(`Loading tools from ${namespace}:`, Object.keys(clientTools).length);
+            Object.assign(tools, clientTools);
+          } else {
+            console.warn(`MCP server "${namespace}" connected but tools() method not available`);
+          }
+        } catch (error) {
+          console.error(`Failed to get tools from ${namespace}:`, error);
+        }
+      } else {
+        console.warn(`MCP server "${namespace}" not connected`);
+      }
+    }
+
+    console.log(`Total MCP tools from specified servers: ${Object.keys(tools).length}`);
+    return tools;
+  },
 };

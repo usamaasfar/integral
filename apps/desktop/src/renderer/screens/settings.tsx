@@ -8,7 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "~/renderer/components/
 
 const SettingsScreen = () => {
   return (
-    <Tabs defaultValue="servers" className="w-full h-full pt-8 pb-2.5 px-2.5">
+    <Tabs defaultValue="general" className="w-full h-full pt-8 pb-2.5 px-2.5">
       <TabsList className="w-full">
         <TabsTrigger value="general">
           <Settings2 />

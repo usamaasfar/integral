@@ -1,4 +1,5 @@
 import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 import { ScrollArea } from "~/renderer/components/ui/scroll-area";
 
 export const ComposerResult = ({ result }) => {
@@ -8,6 +9,7 @@ export const ComposerResult = ({ result }) => {
         <ScrollArea className="h-[80vh] w-full">
           <div className="prose prose-sm max-w-none prose-invert pr-4">
             <ReactMarkdown
+              remarkPlugins={[remarkGfm]}
               components={{
                 code({ node, inline, className, children, ...props }) {
                   return !inline ? (
@@ -27,6 +29,12 @@ export const ComposerResult = ({ result }) => {
                 strong: ({ children }) => <strong className="text-white font-semibold">{children}</strong>,
                 ul: ({ children }) => <ul className="list-disc list-inside text-gray-300 mb-3 space-y-1">{children}</ul>,
                 ol: ({ children }) => <ol className="list-decimal list-inside text-gray-300 mb-3 space-y-1">{children}</ol>,
+                table: ({ children }) => <table className="border-collapse border border-gray-600 w-full mb-4">{children}</table>,
+                thead: ({ children }) => <thead className="bg-gray-800">{children}</thead>,
+                tbody: ({ children }) => <tbody>{children}</tbody>,
+                tr: ({ children }) => <tr className="border-b border-gray-600">{children}</tr>,
+                th: ({ children }) => <th className="border border-gray-600 px-3 py-2 text-left text-white font-semibold">{children}</th>,
+                td: ({ children }) => <td className="border border-gray-600 px-3 py-2 text-gray-300">{children}</td>,
               }}
             >
               {result}

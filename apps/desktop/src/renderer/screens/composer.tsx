@@ -4,7 +4,6 @@ import { Compose } from "~/renderer/components/blocks/compose";
 import { ComposerResult } from "~/renderer/components/blocks/composer-result";
 import { ComposerToolCalling } from "~/renderer/components/blocks/composer-tool-calling";
 import { Greetings } from "~/renderer/components/blocks/greetings";
-import { Settings } from "~/renderer/components/blocks/settings";
 import { Kbd, KbdGroup } from "~/renderer/components/ui/kbd";
 
 const Composer = () => {
@@ -75,7 +74,6 @@ const Composer = () => {
         </div>
       )}
 
-      <Settings />
       <Compose onSubmit={handleAIResponse} />
     </>
   );

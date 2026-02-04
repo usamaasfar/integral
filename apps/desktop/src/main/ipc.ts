@@ -85,23 +85,32 @@ ipcMain.handle("complete-mcp-oauth", async (_event, namespace: string, authCode:
 // AI Composer handler
 ipcMain.on("ai-compose", async (event, prompt: string, mentions?: string[]) => {
   try {
-    console.log(`📝 AI Compose request received:`, { prompt, mentions });
+    console.log("AI Compose request received");
+    console.log("Prompt:", prompt);
+    console.log("Mentions:", mentions);
 
-    // Get MCP tools for mentioned namespaces
-    const mcpTools = {};
+    // Get MCP tools based on mentions
+    let mcpTools = {};
+
     if (mentions && mentions.length > 0) {
-      console.log(`📦 Loading tools for mentions: ${mentions.join(", ")}`);
-      // TODO: Update to use remote.ts instead of mcpManager
-      // mcpTools = mcpManager.getToolsForMentions(mentions);
-      console.log(`✅ Loaded ${Object.keys(mcpTools).length} MCP tools`);
+      console.log(`Loading tools for mentioned servers: ${mentions.join(", ")}`);
+      mcpTools = await remote.getToolsFromServers(mentions);
+      console.log(`Loaded ${Object.keys(mcpTools).length} MCP tools`);
     } else {
-      console.log(`⚠️ No mentions provided - only static tools will be available`);
-      console.log(`💡 Tip: Use @mention in the UI to include MCP server tools`);
+      console.log("No mentions provided - loading all available MCP tools");
+      mcpTools = await remote.getAllTools();
+      console.log(`Loaded ${Object.keys(mcpTools).length} MCP tools from all connected servers`);
     }
 
+    // Create composer agent with MCP tools
     const agent = composer(mcpTools);
 
-    const result = await agent?.generate({
+    if (!agent) {
+      throw new Error("Failed to create composer agent");
+    }
+
+    // Generate response with streaming steps
+    const result = await agent.generate({
       prompt,
       onStepFinish: (step) => {
         // Extract text from step content for UI
@@ -113,9 +122,9 @@ ipcMain.on("ai-compose", async (event, prompt: string, mentions?: string[]) => {
     });
 
     event.reply("ai-complete", result);
-  } catch (error) {
-    console.error("AI Error:", error);
-    event.reply("ai-error", error.message);
+  } catch (error: any) {
+    console.error("AI Compose error:", error);
+    event.reply("ai-error", error?.message || "Unknown error occurred");
   }
 });
 

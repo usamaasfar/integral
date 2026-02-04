@@ -1,23 +1,25 @@
-import { useEffect } from "react";
-
-// import ComposerScreen from "~/renderer/screens/composer";
+import { useEffect, useState } from "react";
+import ComposerScreen from "~/renderer/screens/composer";
 import SettingsScreen from "~/renderer/screens/settings";
-import { useSettingsStore } from "~/renderer/stores/settings";
 
 const App = () => {
-  const { loadSettings, loadProviders, checkOllamaHealth } = useSettingsStore();
+  const [showSettings, setShowSettings] = useState(false);
 
   useEffect(() => {
-    const initializeApp = async () => {
-      await Promise.all([loadSettings(), loadProviders(), checkOllamaHealth()]);
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.metaKey && e.key === "k") {
+        e.preventDefault();
+        setShowSettings((prev) => !prev);
+      }
     };
 
-    initializeApp();
-  }, [loadSettings, loadProviders, checkOllamaHealth]);
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, []);
 
   return (
     <main className="h-screen w-screen ">
-      <SettingsScreen />
+      {showSettings ? <SettingsScreen /> : <ComposerScreen />}
     </main>
   );
 };

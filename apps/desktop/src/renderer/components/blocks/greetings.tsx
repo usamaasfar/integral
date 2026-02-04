@@ -1,8 +1,8 @@
 import dayjs from "dayjs";
-import { useSettingsStore } from "~/renderer/stores/settings";
+import { useGeneralSettingsStore } from "~/renderer/stores/general";
 
 export const Greetings = () => {
-  const username = useSettingsStore((state) => state.username || "User");
+  const username = useGeneralSettingsStore((state) => state.username || "User");
 
   return <div className="text-3xl font-extralight">{getGreeting(username)}</div>;
 };
