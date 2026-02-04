@@ -18,9 +18,9 @@ export interface ElectronAPI {
 
   // MCP Remote Servers
   searchRemoteMCPServers: (term: string) => Promise<any>;
-  connectRemoteMCPServer: (namespace: string) => Promise<MCPConnectionResult>;
-  disconnectMCPServer: (namespace: string) => Promise<{ success: boolean }>;
-  listConnectedMCPs: () => Promise<string[]>;
+  connectRemoteServer: (namespace: any) => Promise<MCPConnectionResult>;
+  disconnectRemoteServer: (namespace: string) => Promise<{ success: boolean }>;
+  listConnectedMCPs: () => Promise<any[]>;
   completeMCPOAuth: (namespace: string, authCode: string) => Promise<MCPConnectionResult>;
   onMCPOAuthCallback: (callback: (data: { code: string; state: string }) => void) => void;
 

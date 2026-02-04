@@ -41,19 +41,19 @@ ipcMain.handle("search-remote-mcp-servers", async (_event, term: string) => {
   }
 });
 
-ipcMain.handle("connect-remote-mcp-server", async (_event, namespace: string) => {
+ipcMain.handle("connect-remote-server", async (_event, server: any) => {
   try {
-    const result = await remote.connectServer(namespace);
+    const result = await remote.connectServer(server);
 
-    if (result.needsAuth) return { success: false, needsAuth: true, namespace };
-    else return { success: true, tools: Object.keys(result.tools || {}) };
+    if (result.reAuth) return { success: false, reAuth: true };
+    else return { success: true };
   } catch (error) {
     console.error("Error connecting to remote MCP:", error);
     throw error;
   }
 });
 
-ipcMain.handle("disconnect-mcp-server", async (_event, namespace: string) => {
+ipcMain.handle("disconnect-remote-server", async (_event, namespace: string) => {
   try {
     await remote.disconnectServer(namespace);
     return { success: true };
@@ -88,7 +88,7 @@ ipcMain.on("ai-compose", async (event, prompt: string, mentions?: string[]) => {
     console.log(`📝 AI Compose request received:`, { prompt, mentions });
 
     // Get MCP tools for mentioned namespaces
-    let mcpTools = {};
+    const mcpTools = {};
     if (mentions && mentions.length > 0) {
       console.log(`📦 Loading tools for mentions: ${mentions.join(", ")}`);
       // TODO: Update to use remote.ts instead of mcpManager

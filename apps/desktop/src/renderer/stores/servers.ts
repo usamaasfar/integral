@@ -3,20 +3,20 @@ import { create } from "zustand";
 export interface RemoteMCPServer {
   id: string;
   qualifiedName: string;
-  namespace: string | null;
+  namespace: string;
   displayName: string;
   description: string;
-  iconUrl: string | null;
+  iconUrl: string;
   verified: boolean;
   homepage: string;
 }
 
-export interface ConnectedMCPServer {
+export interface ConnectRemoteServer {
   namespace: string;
-  displayName?: string;
-  iconUrl?: string;
-  tools?: string[];
-  connectedAt: Date;
+  displayName: string;
+  iconUrl: string;
+  verified: boolean;
+  homepage: string;
 }
 
 interface ServersStore {
@@ -26,15 +26,12 @@ interface ServersStore {
   // Remote MCP States
   isSearchingRemoteMCP: boolean;
   remoteMCPSearchResults: RemoteMCPServer[];
-  connectedServers: ConnectedMCPServer[];
   isConnecting: boolean;
+  connectedServers: Record<string, ConnectRemoteServer>;
 
   // Methods
   getRemoteMCPSearchResults: (term: string) => Promise<void>;
-  connectRemoteMCPServer: (
-    namespace: string,
-    metadata?: { displayName?: string; iconUrl?: string },
-  ) => Promise<{ success: boolean; needsAuth?: boolean }>;
+  connectRemoteMCPServer: (server: ConnectRemoteServer) => Promise<{ success: boolean; needsAuth?: boolean }>;
   disconnectMCPServer: (namespace: string) => Promise<void>;
   loadConnectedServers: () => Promise<void>;
 }
@@ -45,7 +42,7 @@ export const useServersStore = create<ServersStore>((set) => ({
   isLoading: false,
   isSearchingRemoteMCP: false,
   remoteMCPSearchResults: [],
-  connectedServers: [],
+  connectedServers: {},
   isConnecting: false,
 
   getRemoteMCPSearchResults: async (term: string) => {
@@ -63,22 +60,14 @@ export const useServersStore = create<ServersStore>((set) => ({
     }, 500);
   },
 
-  connectRemoteMCPServer: async (namespace: string, metadata?: { displayName?: string; iconUrl?: string }) => {
+  connectRemoteMCPServer: async (server: ConnectRemoteServer) => {
     set({ isConnecting: true });
     try {
-      const result = await window.electronAPI.connectRemoteMCPServer(namespace);
+      const result = await window.electronAPI.connectRemoteServer(server);
 
       if (result.success) {
-        const newServer: ConnectedMCPServer = {
-          namespace,
-          displayName: metadata?.displayName,
-          iconUrl: metadata?.iconUrl,
-          tools: result.tools,
-          connectedAt: new Date(),
-        };
-
         set((state) => ({
-          connectedServers: [...state.connectedServers.filter((s) => s.namespace !== namespace), newServer],
+          connectedServers: { ...state.connectedServers, [server.namespace]: server },
           isConnecting: false,
         }));
 
@@ -99,10 +88,12 @@ export const useServersStore = create<ServersStore>((set) => ({
 
   disconnectMCPServer: async (namespace: string) => {
     try {
-      await window.electronAPI.disconnectMCPServer(namespace);
-      set((state) => ({
-        connectedServers: state.connectedServers.filter((s) => s.namespace !== namespace),
-      }));
+      console.log("disconned mcp server: ", namespace);
+      await window.electronAPI.disconnectRemoteServer(namespace);
+      set((state) => {
+        const { [namespace]: removed, ...rest } = state.connectedServers;
+        return { connectedServers: rest };
+      });
     } catch (error) {
       console.error("Error disconnecting MCP server:", error);
       throw error;
@@ -111,11 +102,7 @@ export const useServersStore = create<ServersStore>((set) => ({
 
   loadConnectedServers: async () => {
     try {
-      const namespaces = await window.electronAPI.listConnectedMCPs();
-      const servers: ConnectedMCPServer[] = namespaces.map((namespace) => ({
-        namespace,
-        connectedAt: new Date(),
-      }));
+      const servers = await window.electronAPI.listConnectedMCPs();
       set({ connectedServers: servers });
     } catch (error) {
       console.error("Error loading connected servers:", error);

@@ -114,79 +114,70 @@ export class OAuthClientProvider {
   }
 }
 
-const connections = new Map<string, any>();
+const connections = new Map<any, any>();
 const authProviders = new Map<string, OAuthClientProvider>();
 
 function getServerUrl(namespace: string): string {
   return `https://server.smithery.ai/${namespace}`;
 }
 
-function saveConnectedServers() {
-  const namespaces = Array.from(connections.keys());
-  storage.store.set("mcp-connected-servers", namespaces);
+function saveConnectedServers(server) {
+  const storedServers = storage.secureStore.get("remote-connected-servers");
+  if (storedServers) {
+    console.log({ ...JSON.parse(storedServers), server });
+    const servers = { ...JSON.parse(storedServers), [server.namespace]: server };
+    storage.secureStore.set("remote-connected-servers", JSON.stringify(servers));
+  } else {
+    storage.secureStore.set("remote-connected-servers", JSON.stringify({ [server.namespace]: server }));
+  }
 }
 
-function loadConnectedServers(): string[] {
-  return (storage.store.get("mcp-connected-servers", []) as string[]) || [];
+function removeConnectedServer(namespace: string) {
+  const storedServers = storage.secureStore.get("remote-connected-servers");
+  if (storedServers) {
+    const servers = JSON.parse(storedServers);
+    delete servers[namespace];
+    storage.secureStore.set("remote-connected-servers", JSON.stringify(servers));
+  }
+}
+
+function loadConnectedServers() {
+  const servers = storage.secureStore.get("remote-connected-servers");
+  if (servers) return JSON.parse(servers);
+  else return {};
 }
 
 export default {
-  async connectServer(namespace: string) {
+  async connectServer(server: any) {
     try {
-      const serverUrl = getServerUrl(namespace);
-      console.log(`Connecting to ${namespace} at ${serverUrl}`);
-
-      let authProvider = authProviders.get(namespace);
+      console.log(server);
+      console.log(`Connecting to ${server.namespace}`);
+      let authProvider = authProviders.get(server.namespace);
       if (!authProvider) {
-        authProvider = new OAuthClientProvider(namespace);
-        authProviders.set(namespace, authProvider);
+        authProvider = new OAuthClientProvider(server.namespace);
+        authProviders.set(server.namespace, authProvider);
       }
 
-      const client = await createMCPClient({
-        transport: { type: "http", url: serverUrl, authProvider },
-      });
+      await createMCPClient({ transport: { type: "http", url: getServerUrl(server.namespace), authProvider } });
+      saveConnectedServers(server);
+      connections.set(server.namespace, server);
 
-      connections.set(namespace, client);
-
-      const tools = await client.tools();
-      console.log(`Connected to ${namespace}. Tools:`, Object.keys(tools));
-
-      saveConnectedServers();
-
-      return { success: true, tools };
+      return { reAuth: false };
     } catch (error: any) {
-      console.error(`Failed to connect to ${namespace}:`, error);
-
-      const errorMessage = error.message?.toLowerCase() || "";
-      const errorName = error.name?.toLowerCase() || "";
-
-      if (
-        errorMessage.includes("unauthorized") ||
-        errorMessage.includes("authorization") ||
-        errorMessage.includes("oauth") ||
-        errorName.includes("unauthorized")
-      ) {
-        console.log(`${namespace} needs OAuth - browser should have opened`);
-        return { success: false, needsAuth: true };
-      }
-
+      console.error(`Failed to connect to ${server.namespace}:`, error);
       throw error;
     }
   },
 
   async disconnectServer(namespace: string) {
     const client = connections.get(namespace);
-    if (!client) return;
-
-    await client.close();
-    connections.delete(namespace);
-    console.log(`Disconnected from ${namespace}`);
-
-    saveConnectedServers();
+    // if client is connected remote it else skip.
+    if (client) await client.close();
+    removeConnectedServer(namespace);
   },
 
   listConnectedServers(): string[] {
-    return Array.from(connections.keys());
+    return loadConnectedServers();
   },
 
   async completeOAuth(namespace: string, authCode: string) {
@@ -263,27 +254,27 @@ export default {
 
   async reconnectAll() {
     const savedServers = loadConnectedServers();
-    console.log(`Reconnecting to ${savedServers.length} servers`);
+    console.log(`Reconnecting to ${savedServers} servers`, savedServers);
 
-    for (const namespace of savedServers) {
-      try {
-        const authProvider = new OAuthClientProvider(namespace);
-        authProviders.set(namespace, authProvider);
+    // for (const namespace of savedServers) {
+    //   try {
+    //     const authProvider = new OAuthClientProvider(namespace);
+    //     authProviders.set(namespace, authProvider);
 
-        if (!authProvider.tokens()) {
-          console.log(`No tokens for ${namespace}, skipping`);
-          continue;
-        }
+    //     if (!authProvider.tokens()) {
+    //       console.log(`No tokens for ${namespace}, skipping`);
+    //       continue;
+    //     }
 
-        const client = await createMCPClient({
-          transport: { type: "http", url: getServerUrl(namespace), authProvider },
-        });
+    //     const client = await createMCPClient({
+    //       transport: { type: "http", url: getServerUrl(namespace), authProvider },
+    //     });
 
-        connections.set(namespace, client);
-        console.log(`Reconnected to ${namespace}`);
-      } catch (error) {
-        console.error(`Failed to reconnect to ${namespace}:`, error);
-      }
-    }
+    //     connections.set(namespace, client);
+    //     console.log(`Reconnected to ${namespace}`);
+    //   } catch (error) {
+    //     console.error(`Failed to reconnect to ${namespace}:`, error);
+    //   }
+    // }
   },
 };

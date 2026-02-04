@@ -133,6 +133,58 @@ const SearchRemoteMCPServers = () => {
   const [connectingServer, setConnectingServer] = useState<string | null>(null);
   const [disconnectingServer, setDisconnectingServer] = useState<string | null>(null);
 
+  console.log({ connectedServers });
+
+  const handleDisconnectServer = async (server) => {
+    if (!server.namespace) return;
+
+    setDisconnectingServer(server.namespace);
+    try {
+      await disconnectMCPServer(server.namespace);
+      console.log(`Disconnected from ${server.displayName}`);
+    } catch (error: any) {
+      console.error("Disconnect error:", error);
+      alert(`Error disconnecting from ${server.displayName}: ${error.message}`);
+    } finally {
+      setDisconnectingServer(null);
+    }
+  };
+
+  const handleConnectServer = async (server) => {
+    if (!server.namespace) return;
+
+    setConnectingServer(server.namespace);
+    try {
+      const result = await connectRemoteMCPServer({
+        namespace: server.namespace,
+        displayName: server.displayName,
+        iconUrl: server.iconUrl,
+        verified: server.verified,
+        homepage: server.homepage,
+      });
+
+      console.log(result);
+
+      // if (result.needsAuth) {
+      //   localStorage.setItem("mcp-pending-oauth-namespace", server.namespace);
+      //   localStorage.setItem("mcp-pending-oauth-displayname", server.displayName);
+      //   localStorage.setItem("mcp-pending-oauth-iconurl", server.iconUrl || "");
+      //   alert(
+      //     `OAuth Required\n\nA browser window has been opened for authorization.\n\nPlease authorize ${server.displayName} in your browser.\n\nThe connection will complete automatically after authorization.`,
+      //   );
+      // } else if (result.success) {
+      //   console.log(`Successfully connected to ${server.displayName}`);
+      // } else {
+      //   alert(`Failed to connect to ${server.displayName}`);
+      // }
+    } catch (error: any) {
+      console.error("Connection error:", error);
+      alert(`Error connecting to ${server.displayName}: ${error.message}`);
+    } finally {
+      setConnectingServer(null);
+    }
+  };
+
   if (!isSearchingRemoteMCP)
     return (
       <div className="">
@@ -152,7 +204,7 @@ const SearchRemoteMCPServers = () => {
                     </Avatar>
                     <div className="flex items-center gap-2 flex-1 min-w-0">
                       <p>{server.displayName}</p>
-                      {connectedServers.some((s) => s.namespace === server.namespace) && (
+                      {connectedServers[server.namespace] && (
                         <Badge variant="secondary" className="gap-1 bg-blue-600">
                           Installed
                         </Badge>
@@ -226,25 +278,12 @@ const SearchRemoteMCPServers = () => {
                       </Button>
                     </DialogClose>
 
-                    {connectedServers.some((s) => s.namespace === server.namespace) ? (
+                    {connectedServers[server.namespace] ? (
                       <Button
                         variant="destructive"
                         className="flex-1"
                         disabled={disconnectingServer === server.namespace}
-                        onClick={async () => {
-                          if (!server.namespace) return;
-
-                          setDisconnectingServer(server.namespace);
-                          try {
-                            await disconnectMCPServer(server.namespace);
-                            console.log(`Disconnected from ${server.displayName}`);
-                          } catch (error: any) {
-                            console.error("Disconnect error:", error);
-                            alert(`Error disconnecting from ${server.displayName}: ${error.message}`);
-                          } finally {
-                            setDisconnectingServer(null);
-                          }
-                        }}
+                        onClick={() => handleDisconnectServer(server)}
                       >
                         {disconnectingServer === server.namespace ? (
                           <>
@@ -259,35 +298,7 @@ const SearchRemoteMCPServers = () => {
                       <Button
                         className="flex-1"
                         disabled={isConnecting || connectingServer === server.namespace}
-                        onClick={async () => {
-                          if (!server.namespace) return;
-
-                          setConnectingServer(server.namespace);
-                          try {
-                            const result = await connectRemoteMCPServer(server.namespace, {
-                              displayName: server.displayName,
-                              iconUrl: server.iconUrl || undefined,
-                            });
-
-                            if (result.needsAuth) {
-                              localStorage.setItem("mcp-pending-oauth-namespace", server.namespace);
-                              localStorage.setItem("mcp-pending-oauth-displayname", server.displayName);
-                              localStorage.setItem("mcp-pending-oauth-iconurl", server.iconUrl || "");
-                              alert(
-                                `OAuth Required\n\nA browser window has been opened for authorization.\n\nPlease authorize ${server.displayName} in your browser.\n\nThe connection will complete automatically after authorization.`,
-                              );
-                            } else if (result.success) {
-                              console.log(`Successfully connected to ${server.displayName}`);
-                            } else {
-                              alert(`Failed to connect to ${server.displayName}`);
-                            }
-                          } catch (error: any) {
-                            console.error("Connection error:", error);
-                            alert(`Error connecting to ${server.displayName}: ${error.message}`);
-                          } finally {
-                            setConnectingServer(null);
-                          }
-                        }}
+                        onClick={async () => handleConnectServer(server)}
                       >
                         {connectingServer === server.namespace ? (
                           <>
@@ -313,7 +324,7 @@ const ConnectedRemoteMCPServers = () => {
   const { connectedServers, disconnectMCPServer } = useServersStore();
   const [disconnecting, setDisconnecting] = useState<string | null>(null);
 
-  if (connectedServers.length === 0) {
+  if (Object.keys(connectedServers).length === 0) {
     return (
       <div className="text-center py-8">
         <Server className="h-12 w-12 mx-auto text-muted-foreground/50 mb-2" />
@@ -323,38 +334,41 @@ const ConnectedRemoteMCPServers = () => {
     );
   }
 
+  const handleDisconnect = async (server) => {
+    setDisconnecting(server);
+    try {
+      await disconnectMCPServer(server);
+    } catch (error) {
+      console.error("Failed to disconnect:", error);
+    }
+    setDisconnecting(null);
+  };
+
   return (
     <div className="space-y-2">
       <p className="text-sm font-medium mb-3">Connected Servers</p>
-      {connectedServers.map((server) => (
-        <div key={server.namespace} className="flex items-center justify-between p-3 border rounded-md">
+      {Object.keys(connectedServers).map((server) => (
+        <div key={server} className="flex items-center justify-between p-3 border rounded-md">
           <div className="flex items-center gap-3">
-            <Avatar className="h-8 w-8 rounded-xs">
-              {server.iconUrl && <AvatarImage src={server.iconUrl} alt={server.displayName || server.namespace} />}
+            <Avatar className="h-5 w-5 rounded-xs">
+              {connectedServers[server].iconUrl && (
+                <AvatarImage src={connectedServers[server].iconUrl} alt={connectedServers[server].displayName} />
+              )}
               <AvatarFallback>
                 <Server className="h-4 w-4" />
               </AvatarFallback>
             </Avatar>
-            <div>
-              <p className="text-sm font-medium">{server.displayName || server.namespace}</p>
-              {server.tools && <p className="text-xs text-muted-foreground">{server.tools.length} tools available</p>}
+            <div className="flex">
+              <p className="text-sm font-medium">{connectedServers[server].displayName} </p>
+              {connectedServers[server].verified && (
+                <Badge variant="ghost">
+                  <BadgeCheck className="text-green-600" />
+                </Badge>
+              )}
             </div>
           </div>
-          <Button
-            variant="outline"
-            size="sm"
-            disabled={disconnecting === server.namespace}
-            onClick={async () => {
-              setDisconnecting(server.namespace);
-              try {
-                await disconnectMCPServer(server.namespace);
-              } catch (error) {
-                console.error("Failed to disconnect:", error);
-              }
-              setDisconnecting(null);
-            }}
-          >
-            {disconnecting === server.namespace ? (
+          <Button variant="outline" size="sm" disabled={disconnecting === server} onClick={async () => handleDisconnect(server)}>
+            {disconnecting === server ? (
               <>
                 <LoaderCircle className="h-3 w-3 animate-spin mr-2" />
                 Disconnecting...

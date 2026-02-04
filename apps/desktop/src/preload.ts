@@ -13,8 +13,8 @@ const electronAPI = {
 
   // MCP Remote Servers
   searchRemoteMCPServers: (term: string) => ipcRenderer.invoke("search-remote-mcp-servers", term),
-  connectRemoteMCPServer: (namespace: string) => ipcRenderer.invoke("connect-remote-mcp-server", namespace),
-  disconnectMCPServer: (namespace: string) => ipcRenderer.invoke("disconnect-mcp-server", namespace),
+  connectRemoteServer: (namespace: string) => ipcRenderer.invoke("connect-remote-server", namespace),
+  disconnectRemoteServer: (namespace: string) => ipcRenderer.invoke("disconnect-remote-server", namespace),
   listConnectedMCPs: () => ipcRenderer.invoke("list-connected-mcps"),
   completeMCPOAuth: (namespace: string, authCode: string) => ipcRenderer.invoke("complete-mcp-oauth", namespace, authCode),
   onMCPOAuthCallback: (callback: (data: { code: string; state: string }) => void) => {
