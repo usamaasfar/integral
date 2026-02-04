@@ -1,9 +1,13 @@
 import dayjs from "dayjs";
+import { useEffect } from "react";
 import { useGeneralSettingsStore } from "~/renderer/stores/general";
 
 export const Greetings = () => {
-  const { username } = useGeneralSettingsStore();
-  console.log({ username });
+  const { username, getGeneralSettings } = useGeneralSettingsStore();
+
+  useEffect(() => {
+    getGeneralSettings();
+  }, [getGeneralSettings]);
 
   return <div className="text-3xl font-extralight">{getGreeting(username)}</div>;
 };
