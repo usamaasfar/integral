@@ -10,7 +10,7 @@ export function Compose({
   onSubmit,
   externalOpen,
   onOpenChange,
-  replyingTo
+  replyingTo,
 }: {
   onSubmit?: (prompt: string, mentions?: string[]) => Promise<any>;
   externalOpen?: boolean;

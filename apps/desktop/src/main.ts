@@ -1,7 +1,11 @@
 import path from "node:path";
+import { config } from "dotenv";
 import { app, BrowserWindow } from "electron";
 import started from "electron-squirrel-startup";
 import Store from "electron-store";
+
+// Load environment variables from .env file
+config();
 
 import "~/main/ipc";
 import remote from "~/main/mcp/remote";
@@ -31,6 +35,7 @@ const createWindow = () => {
     width: 800,
     height: 600,
     titleBarStyle: "hidden",
+    icon: path.join(__dirname, "../../icons/icon.png"),
     webPreferences: {
       preload: path.join(__dirname, "preload.js"),
     },

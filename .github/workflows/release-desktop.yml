@@ -1,0 +1,143 @@
+name: Release Desktop App
+
+on:
+  push:
+    tags:
+      - "v*.*.*"
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version to release (e.g., 1.0.0)"
+        required: false
+        type: string
+
+permissions:
+  contents: write
+
+jobs:
+  build-macos:
+    name: Build macOS App
+    runs-on: macos-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # Needed for changelog generation
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "18"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build desktop app
+        working-directory: apps/desktop
+        env:
+          SMITHERY_API_KEY: ${{ secrets.SMITHERY_API_KEY }}
+        run: npm run make
+
+      - name: List build artifacts
+        working-directory: apps/desktop
+        run: |
+          echo "Build artifacts:"
+          find out/make -type f
+
+      - name: Upload macOS ZIP artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: integral-macos-zip
+          path: apps/desktop/out/make/zip/darwin/**/*.zip
+          retention-days: 30
+          if-no-files-found: error
+
+  generate-changelog:
+    name: Generate Changelog
+    runs-on: ubuntu-latest
+    outputs:
+      changelog: ${{ steps.changelog.outputs.changelog }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Get previous tag
+        id: prev_tag
+        run: |
+          CURRENT_TAG="${{ github.ref_name }}"
+          # Get all tags sorted by version, find the one before current
+          PREVIOUS_TAG=$(git tag -l 'v*' | sort -V | grep -B1 "^${CURRENT_TAG}$" | head -1)
+          if [ "$PREVIOUS_TAG" = "$CURRENT_TAG" ] || [ -z "$PREVIOUS_TAG" ]; then
+            PREVIOUS_TAG=""
+          fi
+          echo "current_tag=${CURRENT_TAG}" >> $GITHUB_OUTPUT
+          echo "previous_tag=${PREVIOUS_TAG}" >> $GITHUB_OUTPUT
+          echo "Current tag: ${CURRENT_TAG}"
+          echo "Previous tag: ${PREVIOUS_TAG:-none}"
+
+      - name: Generate changelog
+        id: changelog
+        run: |
+          CURRENT_TAG="${{ steps.prev_tag.outputs.current_tag }}"
+          PREVIOUS_TAG="${{ steps.prev_tag.outputs.previous_tag }}"
+
+          echo "# What's Changed" > changelog.md
+          echo "" >> changelog.md
+
+          if [ -n "$PREVIOUS_TAG" ]; then
+            echo "Commits since ${PREVIOUS_TAG}:" >> changelog.md
+            echo "" >> changelog.md
+            git log ${PREVIOUS_TAG}..${CURRENT_TAG} --pretty=format:"- %s (%h)" --no-merges >> changelog.md
+          else
+            echo "Initial release" >> changelog.md
+            echo "" >> changelog.md
+            git log ${CURRENT_TAG} --pretty=format:"- %s (%h)" --no-merges >> changelog.md
+          fi
+
+          echo "" >> changelog.md
+          echo "" >> changelog.md
+          echo "**Full Changelog**: https://github.com/${{ github.repository }}/compare/${PREVIOUS_TAG}...${CURRENT_TAG}" >> changelog.md
+
+          cat changelog.md
+
+      - name: Upload changelog artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: changelog
+          path: changelog.md
+          retention-days: 1
+
+  create-release:
+    name: Create GitHub Release
+    needs: [build-macos, generate-changelog]
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/v')
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: release-artifacts
+
+      - name: List all artifacts
+        run: |
+          echo "Downloaded artifacts:"
+          find release-artifacts -type f
+
+      - name: Create Release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release create "${{ github.ref_name }}" \
+            release-artifacts/integral-macos-zip/*.zip \
+            --title "Integral Desktop ${{ github.ref_name }}" \
+            --notes-file release-artifacts/changelog/changelog.md \
+            --draft
