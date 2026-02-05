@@ -8,7 +8,7 @@ const result = await remote.connectServer({
   displayName: "Gmail",
   iconUrl: "...",
   verified: true,
-  homepage: "..."
+  homepage: "...",
 });
 ```
 
@@ -54,7 +54,7 @@ When `needsAuth: true`:
 
 2. User logs in and authorizes in browser
 
-3. Browser redirects to: integral.computer://oauth/callback?code=ABC123&state=...
+3. Browser redirects to: alpaca.computer://oauth/callback?code=ABC123&state=...
 
 4. Your app catches this deep link (need to implement this part)
 
@@ -143,7 +143,7 @@ connectServer(server)
    SUCCESS              User authorizes in browser
        │                          │
        │                          ▼
-       │              integral.computer://oauth/callback?code=...
+       │              alpaca.computer://oauth/callback?code=...
        │                          │
        │                          ▼
        │              IPC event: mcp-oauth-callback

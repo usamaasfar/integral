@@ -12,7 +12,8 @@
     "package": "electron-forge package",
     "make": "electron-forge make",
     "publish": "electron-forge publish",
-    "lint": "biome format --write .",
+    "format": "biome format --write .",
+    "format:check": "biome ci .",
     "check-types": "tsc --noEmit",
     "clean:cache": "npm cache clean --force"
   },

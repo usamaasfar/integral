@@ -8,6 +8,10 @@ echo "📦 Installing dependencies..."
 npm ci
 
 echo ""
+echo "✨ Checking code formatting..."
+npx biome ci .
+
+echo ""
 echo "🏗️  Building desktop app..."
 cd apps/desktop
 npm run make

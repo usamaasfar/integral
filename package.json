@@ -1,5 +1,5 @@
 {
-  "name": "integral.computer",
+  "name": "alpaca.computer",
   "private": true,
   "scripts": {
     "build": "turbo run build",

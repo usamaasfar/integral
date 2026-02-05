@@ -5,7 +5,7 @@ const Welcome = () => {
     <div className="h-full flex flex-col items-center justify-center">
       <div className="w-lg">
         <div className="text-center flex flex-col gap-4">
-          <p className="text-4xl font-bold">Integral</p>
+          <p className="text-4xl font-bold">Alpaca</p>
           <p className="">
             Commodo aliqua exercitation proident officia est nulla duis Lorem pariatur ipsum. Commodo aliqua exercitation proident officia
             est nulla duis Lorem pariatur ipsum.

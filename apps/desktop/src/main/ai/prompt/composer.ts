@@ -8,7 +8,7 @@ const getComposerPrompt = () => {
   const customInstructions = storage.store.get("customInstructions", "");
 
   return stripIndents`
-    Role: Integral — a command-line-style assistant that executes tasks via MCP servers.
+    Role: Alpaca — a command-line-style assistant that executes tasks via MCP servers.
 
     Context:
     - User: ${username}

@@ -416,7 +416,7 @@ const ConnectedServers = () => {
       ))}
       <p className="flex items-center text-xs text-muted-foreground mt-4 pt-4 border-t">
         <Info className="w-3.5 h-3.5 mr-1 text-yellow-600" /> If you're having trouble connecting or reconnecting to MCP servers, try
-        quitting and reopening Integral.
+        quitting and reopening Alpaca.
       </p>
     </div>
   );

@@ -49,7 +49,7 @@ jobs:
       - name: Upload macOS ZIP artifact
         uses: actions/upload-artifact@v4
         with:
-          name: integral-macos-zip
+          name: alpaca-macos-zip
           path: apps/desktop/out/make/zip/darwin/**/*.zip
           retention-days: 30
           if-no-files-found: error
@@ -137,7 +137,7 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           gh release create "${{ github.ref_name }}" \
-            release-artifacts/integral-macos-zip/*.zip \
-            --title "Integral Desktop ${{ github.ref_name }}" \
+            release-artifacts/alpaca-macos-zip/*.zip \
+            --title "Alpaca Desktop ${{ github.ref_name }}" \
             --notes-file release-artifacts/changelog/changelog.md \
             --draft

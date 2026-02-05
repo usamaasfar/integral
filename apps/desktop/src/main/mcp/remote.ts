@@ -45,12 +45,12 @@ export class OAuthClientProvider {
   }
 
   get redirectUrl(): string {
-    return "integral.computer://oauth/callback";
+    return "alpaca.computer://oauth/callback";
   }
 
   get clientMetadata() {
     return {
-      client_name: "Integral Computer Desktop",
+      client_name: "Alpaca Computer Desktop",
       redirect_uris: [this.redirectUrl],
       grant_types: ["authorization_code", "refresh_token"],
       response_types: ["code"],

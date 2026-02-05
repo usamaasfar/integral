@@ -21,10 +21,10 @@ if (started) {
 // Set as default protocol client for OAuth callbacks
 if (process.defaultApp) {
   if (process.argv.length >= 2) {
-    app.setAsDefaultProtocolClient("integral.computer", process.execPath, [path.resolve(process.argv[1])]);
+    app.setAsDefaultProtocolClient("alpaca.computer", process.execPath, [path.resolve(process.argv[1])]);
   }
 } else {
-  app.setAsDefaultProtocolClient("integral.computer");
+  app.setAsDefaultProtocolClient("alpaca.computer");
 }
 
 let mainWindow: BrowserWindow | null = null;
@@ -64,7 +64,7 @@ app.on("open-url", (event, url) => {
   event.preventDefault();
   console.log("OAuth callback received:", url);
 
-  if (url.startsWith("integral.computer://oauth/callback")) {
+  if (url.startsWith("Alpaca.computer://oauth/callback")) {
     const urlObj = new URL(url);
     const code = urlObj.searchParams.get("code");
     const state = urlObj.searchParams.get("state") || "";
