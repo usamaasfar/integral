@@ -18,6 +18,8 @@ if (started) {
   app.quit();
 }
 
+if (process.platform === "win32") app.setAppUserModelId("com.alpaca.desktop");
+
 // Set as default protocol client for OAuth callbacks
 if (process.defaultApp) {
   if (process.argv.length >= 2) {

@@ -11,9 +11,15 @@ const config: ForgeConfig = {
   packagerConfig: {
     asar: true,
     icon: "./icons/icon",
+    appBundleId: "com.alpaca.desktop",
   },
   rebuildConfig: {},
-  makers: [new MakerSquirrel({}), new MakerZIP({}, ["darwin"]), new MakerRpm({}), new MakerDeb({})],
+  makers: [
+    new MakerSquirrel({ name: "com.alpaca.desktop" }),
+    new MakerZIP({}, ["darwin"]),
+    new MakerRpm({ options: { name: "com.alpaca.desktop", productName: "Alpaca", bin: "alpaca" } }),
+    new MakerDeb({ options: { name: "com.alpaca.desktop", productName: "Alpaca", bin: "alpaca" } }),
+  ],
   plugins: [
     new VitePlugin({
       // `build` can specify multiple entry builds, which can be Main process, Preload scripts, Worker process, etc.
