@@ -40,6 +40,12 @@ const electronAPI = {
     ipcRenderer.on("ai-error", (_event, error) => callback(error));
   },
 
+  // AI Checkpoints
+  onAICheckpointRequired: (callback: (checkpoint: any) => void) => {
+    ipcRenderer.on("ai-checkpoint-required", (_event, checkpoint) => callback(checkpoint));
+  },
+  submitAICheckpoint: (checkpointId: string, response: any) => ipcRenderer.invoke("ai-checkpoint-response", checkpointId, response),
+
   // System
   openExternalLink: (url: string) => ipcRenderer.invoke("open-external-link", url),
 };

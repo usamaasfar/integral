@@ -4,6 +4,7 @@ import { Compose } from "~/renderer/components/blocks/compose";
 import { ComposerResult } from "~/renderer/components/blocks/composer-result";
 import { ComposerToolCalling } from "~/renderer/components/blocks/composer-tool-calling";
 import { Greetings } from "~/renderer/components/blocks/greetings";
+import type { CheckpointData } from "~/renderer/components/CheckpointDialog";
 
 interface ComposerProps {
   showSettings: boolean;
@@ -16,6 +17,7 @@ const Composer = ({ showSettings }: ComposerProps) => {
   const [conversationHistory, setConversationHistory] = useState<any[]>([]);
   const [isReplying, setIsReplying] = useState(false);
   const [composeOpen, setComposeOpen] = useState(false);
+  const [activeCheckpoint, setActiveCheckpoint] = useState<CheckpointData | null>(null);
 
   useEffect(() => {
     const stepHandler = (step: any) => {
@@ -36,9 +38,14 @@ const Composer = ({ showSettings }: ComposerProps) => {
       setIsLoading(false);
     };
 
+    const checkpointHandler = (checkpoint: CheckpointData) => {
+      setActiveCheckpoint(checkpoint);
+    };
+
     window.electronAPI.onAIStep(stepHandler);
     window.electronAPI.onAIComplete(completeHandler);
     window.electronAPI.onAIError(errorHandler);
+    window.electronAPI.onAICheckpointRequired(checkpointHandler);
   }, []);
 
   // Composer shortcuts (N, R, Escape on result)
@@ -100,6 +107,20 @@ const Composer = ({ showSettings }: ComposerProps) => {
     }
   };
 
+  const handleCheckpointSubmit = async (values: Record<string, any>) => {
+    if (activeCheckpoint) {
+      await window.electronAPI.submitAICheckpoint(activeCheckpoint.id, { values });
+      setActiveCheckpoint(null);
+    }
+  };
+
+  const handleCheckpointCancel = async () => {
+    if (activeCheckpoint) {
+      await window.electronAPI.submitAICheckpoint(activeCheckpoint.id, { cancelled: true });
+      setActiveCheckpoint(null);
+    }
+  };
+
   return (
     <>
       {isLoading && steps.length === 0 && (
@@ -108,7 +129,14 @@ const Composer = ({ showSettings }: ComposerProps) => {
         </div>
       )}
 
-      {steps.length > 0 && !result && <ComposerToolCalling steps={steps} />}
+      {steps.length > 0 && !result && (
+        <ComposerToolCalling
+          steps={steps}
+          checkpoint={activeCheckpoint}
+          onCheckpointSubmit={handleCheckpointSubmit}
+          onCheckpointCancel={handleCheckpointCancel}
+        />
+      )}
 
       {result && (
         <div className="mt-14 h-[calc(100vh-3.5rem)]">

@@ -6,6 +6,23 @@ import ollama from "~/main/services/ollama";
 import smitheryService from "~/main/services/smithery";
 import storage from "~/main/utils/storage";
 
+// Global state for checkpoint management
+const checkpointHandlers = new Map<string, { resolve: (value: any) => void; reject: (error: Error) => void }>();
+let currentComposeEvent: Electron.IpcMainEvent | null = null;
+
+// Export for use in tools
+export function getCurrentComposeEvent() {
+  return currentComposeEvent;
+}
+
+export function registerCheckpointHandler(id: string, resolve: (value: any) => void, reject: (error: Error) => void) {
+  checkpointHandlers.set(id, { resolve, reject });
+}
+
+export function unregisterCheckpointHandler(id: string) {
+  checkpointHandlers.delete(id);
+}
+
 ipcMain.handle("set-storage", (_event, key: string, value: any) => {
   storage.store.set(key, value);
   return true;
@@ -85,6 +102,9 @@ ipcMain.handle("complete-mcp-oauth", async (_event, namespace: string, authCode:
 // AI Composer handler
 ipcMain.on("ai-compose", async (event, prompt: string | null, mentions?: string[], messages?: any[]) => {
   try {
+    // Store current event for checkpoint access
+    currentComposeEvent = event;
+
     // Get MCP tools based on mentions (from cache - instant)
     let mcpTools = {};
 
@@ -124,6 +144,22 @@ ipcMain.on("ai-compose", async (event, prompt: string | null, mentions?: string[
   } catch (error: any) {
     console.error("AI Compose error:", error);
     event.reply("ai-error", error?.message || "Unknown error occurred");
+  } finally {
+    // Clear current event reference
+    currentComposeEvent = null;
+  }
+});
+
+// Checkpoint response handler
+ipcMain.handle("ai-checkpoint-response", async (_event, checkpointId: string, response: any) => {
+  const handler = checkpointHandlers.get(checkpointId);
+  if (handler) {
+    checkpointHandlers.delete(checkpointId);
+    if (response.cancelled) {
+      handler.reject(new Error("User cancelled the checkpoint"));
+    } else {
+      handler.resolve(response.values);
+    }
   }
 });
 

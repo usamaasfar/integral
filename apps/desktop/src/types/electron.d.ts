@@ -35,6 +35,10 @@ export interface ElectronAPI {
   onAIComplete: (callback: (result: any) => void) => void;
   onAIError: (callback: (error: any) => void) => void;
 
+  // AI Checkpoints
+  onAICheckpointRequired: (callback: (checkpoint: any) => void) => void;
+  submitAICheckpoint: (checkpointId: string, response: any) => Promise<void>;
+
   // System
   openExternalLink: (url: string) => Promise<void>;
 }
