@@ -18,7 +18,7 @@ export const ComposerResult = ({ result, footer }: { result: string; footer?: Re
               remarkPlugins={[remarkGfm, remarkMath]}
               rehypePlugins={[rehypeKatex, rehypeHighlight]}
               components={{
-                code({ node, inline, className, children, ...props }) {
+                code({ node, inline, className, children, ...props }: any) {
                   return !inline ? (
                     <pre className="overflow-x-auto rounded-md border border-border bg-muted px-4 py-3 text-sm text-foreground">
                       <code {...props}>{children}</code>
@@ -35,7 +35,16 @@ export const ComposerResult = ({ result, footer }: { result: string; footer?: Re
                 p: ({ children }) => <p className="mb-3 leading-relaxed text-foreground">{children}</p>,
                 strong: ({ children }) => <strong className="font-semibold text-foreground">{children}</strong>,
                 a: ({ children, href }) => (
-                  <a href={href} className="text-primary underline underline-offset-2" target="_blank" rel="noreferrer">
+                  <a
+                    href={href}
+                    className="text-primary underline underline-offset-2 cursor-pointer"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      if (href) {
+                        window.electronAPI.openExternalLink(href);
+                      }
+                    }}
+                  >
                     {children}
                   </a>
                 ),

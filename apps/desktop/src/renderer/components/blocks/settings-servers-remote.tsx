@@ -164,13 +164,9 @@ const SearchServers = () => {
               </Avatar>
               <div className="flex items-center gap-2 flex-1 min-w-0">
                 <p>{server.displayName}</p>
-                {connectedServers[server.namespace] && (
-                  <Badge variant="secondary" className="gap-1 bg-blue-600">
-                    Installed
-                  </Badge>
-                )}
+                {connectedServers[server.namespace] && <Badge className="gap-1 bg-blue-600">Installed</Badge>}
                 {server.verified && (
-                  <Badge variant="secondary" className="gap-1 bg-green-600">
+                  <Badge className="gap-1 bg-green-600">
                     <BadgeCheck className="h-3 w-3" />
                     Verified
                   </Badge>
@@ -203,7 +199,7 @@ const SearchServers = () => {
 
                   {server.displayName}
                   {server.verified && (
-                    <Badge variant="secondary" className="gap-1 bg-green-600">
+                    <Badge className="gap-1 bg-green-600">
                       <BadgeCheck className="h-3 w-3" />
                       Verified
                     </Badge>
@@ -374,7 +370,7 @@ const ConnectedServers = () => {
                     "Disconnect"
                   )}
                 </Button>
-                <Badge variant="secondary" className="bg-green-600">
+                <Badge className="bg-green-600">
                   <CircleCheck data-icon="inline-start" />
                   Connected
                 </Badge>
@@ -406,7 +402,7 @@ const ConnectedServers = () => {
                     "Remove"
                   )}
                 </Button>
-                <Badge variant="secondary" className="bg-red-600">
+                <Badge className="bg-red-600">
                   <CircleX data-icon="inline-start" />
                   Disconnected
                 </Badge>

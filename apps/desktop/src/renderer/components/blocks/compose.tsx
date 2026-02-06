@@ -24,12 +24,21 @@ export function Compose({
 
   const { getConnectedServers } = useServersStore();
 
-  // Sync external open state
+  // Sync external open state and reload servers when opening
   useEffect(() => {
     if (externalOpen !== undefined) {
       setOpen(externalOpen);
+
+      // When opening fresh (not replying), clear mentions and reload servers
+      if (externalOpen && !replyingTo) {
+        setValue([]);
+        getConnectedServers().then((servers) => {
+          const connectedArray = Object.values(servers).filter((server) => server.connected);
+          setConnectedMCPs(connectedArray);
+        });
+      }
     }
-  }, [externalOpen]);
+  }, [externalOpen, replyingTo, getConnectedServers]);
 
   useEffect(() => {
     const loadServers = async () => {
@@ -39,31 +48,6 @@ export function Compose({
       setConnectedMCPs(connectedArray);
     };
     loadServers();
-  }, [getConnectedServers]);
-
-  useEffect(() => {
-    const handleKeyDown = async (e: KeyboardEvent) => {
-      // Don't trigger if user is typing in input/textarea
-      const target = e.target as HTMLElement;
-      if (target.tagName === "INPUT" || target.tagName === "TEXTAREA") {
-        return;
-      }
-
-      if (e.key === "n" && !e.metaKey && !e.ctrlKey && !e.altKey) {
-        e.preventDefault();
-        setValue([]);
-
-        // Reload servers before opening
-        const servers = await getConnectedServers();
-        const connectedArray = Object.values(servers).filter((server) => server.connected);
-        setConnectedMCPs(connectedArray);
-
-        setOpen(true);
-      }
-    };
-
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
   }, [getConnectedServers]);
 
   const onHandleSumbit = async (e: React.KeyboardEvent<HTMLTextAreaElement | HTMLInputElement>) => {
@@ -128,9 +112,8 @@ export function Compose({
       >
         <div className="space-y-2">
           {replyingTo && (
-            <div className="px-2 py-1.5 border-l-2 border-blue-500 bg-muted/50">
-              <div className="text-xs text-muted-foreground mb-0.5">Replying to</div>
-              <div className="text-sm text-muted-foreground line-clamp-2">{replyingTo}</div>
+            <div className="px-2 py-1.5 bg-muted rounded-md">
+              <div className="text-xs text-muted-foreground line-clamp-2 italic">{replyingTo}</div>
             </div>
           )}
           <Mention.MentionRoot
@@ -141,12 +124,12 @@ export function Compose({
             <Mention.MentionInput
               onKeyDown={onHandleSumbit}
               placeholder="Type @ to mention someone..."
-              className="flex min-h-[60px] w-full bg-transparent px-2 py-2 text-base placeholder:text-muted-foreground focus-visible:outline-none resize-none border-none md:text-sm"
+              className="flex min-h-15 w-full bg-transparent px-2 py-2 text-base placeholder:text-muted-foreground focus-visible:outline-none resize-none border-none md:text-sm"
               asChild
             >
               <textarea />
             </Mention.MentionInput>
-            <Mention.MentionContent className="data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 relative z-[60] min-w-[var(--dice-anchor-width)] overflow-hidden rounded-md border border-zinc-200 bg-white p-1 text-zinc-950 shadow-md data-[state=closed]:animate-out data-[state=open]:animate-in dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-50">
+            <Mention.MentionContent className="data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 relative z-60 min-w-[var(--dice-anchor-width)] overflow-hidden rounded-md border border-zinc-200 bg-white p-1 text-zinc-950 shadow-md data-[state=closed]:animate-out data-[state=open]:animate-in dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-50">
               {connectedMCPs.map((mcp) => (
                 <Mention.MentionItem
                   key={mcp.namespace}
@@ -154,7 +137,7 @@ export function Compose({
                   className="relative flex items-center gap-1.5 w-full cursor-pointer select-none rounded-sm px-2 py-1.5 text-sm outline-hidden data-disabled:pointer-events-none data-highlighted:bg-zinc-100 data-highlighted:text-zinc-900 data-disabled:opacity-50 dark:data-highlighted:bg-zinc-800 dark:data-highlighted:text-zinc-50"
                 >
                   <Avatar size="xs">
-                    <AvatarImage src={mcp.iconUrl} />
+                    <AvatarImage src={mcp.iconUrl} className="object-contain rounded-full" />
                     <AvatarFallback>{mcp.displayName.slice(0, 1)}</AvatarFallback>
                   </Avatar>
                   <span className="text-sm">{mcp.displayName}</span>
@@ -169,8 +152,8 @@ export function Compose({
                 {value.map((mention, index) => {
                   const mcp = connectedMCPs.find((m) => m.displayName === mention);
                   return (
-                    <Avatar key={index} size="sm" className="border-2 border-black bg-white">
-                      <AvatarImage src={mcp?.iconUrl} className="object-contain p-1" />
+                    <Avatar key={index} size="sm" className="border bg-white">
+                      <AvatarImage src={mcp?.iconUrl} className="object-contain p-0.5 rounded-full" />
                       <AvatarFallback>{mention.slice(0, 1)}</AvatarFallback>
                     </Avatar>
                   );
