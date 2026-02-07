@@ -109,16 +109,11 @@ ipcMain.on("ai-compose", async (event, prompt: string | null, mentions?: string[
       event.reply("ai-step", stepWithText);
     };
 
+    console.log(messages);
     const result =
       messages && messages.length > 0
-        ? await agent.generate({
-            messages,
-            onStepFinish: onStepFinishHandler,
-          })
-        : await agent.generate({
-            prompt: prompt!,
-            onStepFinish: onStepFinishHandler,
-          });
+        ? await agent.generate({ messages, onStepFinish: onStepFinishHandler })
+        : await agent.generate({ prompt: prompt!, onStepFinish: onStepFinishHandler });
 
     event.reply("ai-complete", result);
   } catch (error: any) {

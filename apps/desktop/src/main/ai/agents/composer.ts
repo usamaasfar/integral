@@ -1,5 +1,5 @@
 import { stepCountIs, type Tool, ToolLoopAgent } from "ai";
-
+import { truncate } from "~/main/ai/agents/tooling";
 import composerPrompt from "~/main/ai/prompt/composer";
 import { getModel } from "~/main/ai/providers";
 
@@ -15,6 +15,11 @@ function composer(mcpTools: Record<string, Tool> = {}) {
       model: getModel(),
       stopWhen: stepCountIs(128),
       tools: mcpTools,
+      temperature: 0.7,
+      prepareStep: async ({ messages }) => {
+        const processed = truncate(messages);
+        return { messages: processed };
+      },
     });
 
     return composer;

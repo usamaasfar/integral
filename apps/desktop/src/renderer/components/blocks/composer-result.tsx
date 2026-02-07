@@ -11,33 +11,43 @@ export const ComposerResult = ({ result, footer }: { result: string; footer?: Re
 
   return (
     <div className="relative h-full w-full">
-      <ScrollArea className="h-full w-full" scrollbarClassName="data-[orientation=vertical]:w-2.5 data-[orientation=vertical]:py-32">
-        <div className="mx-auto min-h-full max-w-2xl px-8 pr-14 pt-2 pb-6 flex flex-col">
-          <div className="prose prose-sm max-w-none text-foreground">
+      <ScrollArea className="h-full w-full" scrollbarClassName="data-[orientation=vertical]:w-2 data-[orientation=vertical]:py-32">
+        <div className="mx-auto min-h-full max-w-3xl px-12 pr-16 pt-4 pb-8 flex flex-col">
+          <div className="prose prose-neutral dark:prose-invert max-w-none">
             <ReactMarkdown
               remarkPlugins={[remarkGfm, remarkMath]}
               rehypePlugins={[rehypeKatex, rehypeHighlight]}
               components={{
                 code({ node, inline, className, children, ...props }: any) {
                   return !inline ? (
-                    <pre className="overflow-x-auto rounded-md border border-border bg-muted px-4 py-3 text-sm text-foreground">
+                    <pre className="overflow-x-auto rounded-lg bg-muted/50 px-4 py-3 my-4 text-[13px] leading-relaxed font-mono">
                       <code {...props}>{children}</code>
                     </pre>
                   ) : (
-                    <code className="rounded bg-muted px-1 py-0.5 text-sm text-foreground" {...props}>
+                    <code className="rounded px-1.5 py-0.5 bg-muted/60 text-[13px] font-mono" {...props}>
                       {children}
                     </code>
                   );
                 },
-                h1: ({ children }) => <h1 className="mb-4 text-2xl font-bold text-foreground">{children}</h1>,
-                h2: ({ children }) => <h2 className="mb-3 text-xl font-semibold text-foreground">{children}</h2>,
-                h3: ({ children }) => <h3 className="mb-2 text-lg font-medium text-foreground">{children}</h3>,
-                p: ({ children }) => <p className="mb-3 leading-relaxed text-foreground">{children}</p>,
+                h1: ({ children }) => (
+                  <h1 className="mb-6 mt-8 text-3xl font-semibold tracking-tight first:mt-0">{children}</h1>
+                ),
+                h2: ({ children }) => (
+                  <h2 className="mb-4 mt-8 text-2xl font-semibold tracking-tight first:mt-0">{children}</h2>
+                ),
+                h3: ({ children }) => (
+                  <h3 className="mb-3 mt-6 text-xl font-medium tracking-tight first:mt-0">{children}</h3>
+                ),
+                h4: ({ children }) => (
+                  <h4 className="mb-2 mt-4 text-base font-medium first:mt-0">{children}</h4>
+                ),
+                p: ({ children }) => <p className="mb-4 leading-7 text-foreground/90">{children}</p>,
                 strong: ({ children }) => <strong className="font-semibold text-foreground">{children}</strong>,
+                em: ({ children }) => <em className="italic">{children}</em>,
                 a: ({ children, href }) => (
                   <a
                     href={href}
-                    className="text-primary underline underline-offset-2 cursor-pointer"
+                    className="text-foreground underline decoration-foreground/30 underline-offset-4 hover:decoration-foreground/60 transition-colors cursor-pointer"
                     onClick={(e) => {
                       e.preventDefault();
                       if (href) {
@@ -48,34 +58,52 @@ export const ComposerResult = ({ result, footer }: { result: string; footer?: Re
                     {children}
                   </a>
                 ),
-                ul: ({ children }) => <ul className="mb-3 list-inside list-disc space-y-1 text-foreground">{children}</ul>,
-                ol: ({ children }) => <ol className="mb-3 list-inside list-decimal space-y-1 text-foreground">{children}</ol>,
+                ul: ({ children }) => (
+                  <ul className="mb-4 space-y-2 list-disc list-outside ml-5 marker:text-foreground/40">
+                    {children}
+                  </ul>
+                ),
+                ol: ({ children }) => (
+                  <ol className="mb-4 space-y-2 list-decimal list-outside ml-5 marker:text-foreground/40">
+                    {children}
+                  </ol>
+                ),
+                li: ({ children }) => <li className="leading-7 text-foreground/90 pl-1">{children}</li>,
                 blockquote: ({ children }) => (
-                  <blockquote className="mb-3 border-l-2 border-border pl-3 text-muted-foreground italic">{children}</blockquote>
+                  <blockquote className="mb-4 border-l-2 border-foreground/20 pl-4 py-0.5 italic text-foreground/70">
+                    {children}
+                  </blockquote>
                 ),
-                table: ({ children }) => <table className="mb-4 w-full border-collapse border border-border">{children}</table>,
-                thead: ({ children }) => <thead className="bg-muted">{children}</thead>,
-                tbody: ({ children }) => <tbody>{children}</tbody>,
-                tr: ({ children }) => <tr className="border-b border-border">{children}</tr>,
+                hr: () => <hr className="my-8 border-0 h-px bg-border/50" />,
+                table: ({ children }) => (
+                  <div className="my-6 overflow-x-auto">
+                    <table className="w-full border-collapse">{children}</table>
+                  </div>
+                ),
+                thead: ({ children }) => <thead className="border-b border-border">{children}</thead>,
+                tbody: ({ children }) => <tbody className="divide-y divide-border/50">{children}</tbody>,
+                tr: ({ children }) => <tr>{children}</tr>,
                 th: ({ children }) => (
-                  <th className="border border-border px-3 py-2 text-left font-semibold text-foreground">{children}</th>
+                  <th className="px-4 py-3 text-left text-sm font-semibold text-foreground/90">{children}</th>
                 ),
-                td: ({ children }) => <td className="border border-border px-3 py-2 text-foreground">{children}</td>,
+                td: ({ children }) => (
+                  <td className="px-4 py-3 text-sm text-foreground/80">{children}</td>
+                ),
               }}
             >
               {result}
             </ReactMarkdown>
           </div>
-          {footer && <div className="mt-auto pt-6">{footer}</div>}
+          {footer && <div className="mt-auto pt-8">{footer}</div>}
         </div>
       </ScrollArea>
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute inset-x-0 top-0 h-2 bg-linear-to-b from-background via-background/60 to-transparent"
+        className="pointer-events-none absolute inset-x-0 top-0 h-8 bg-gradient-to-b from-background to-transparent"
       />
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute inset-x-0 bottom-0 h-5 bg-linear-to-t from-background via-background/70 to-transparent"
+        className="pointer-events-none absolute inset-x-0 bottom-0 h-12 bg-gradient-to-t from-background to-transparent"
       />
     </div>
   );
