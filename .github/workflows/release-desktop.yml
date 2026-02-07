@@ -59,67 +59,9 @@ jobs:
           retention-days: 30
           if-no-files-found: error
 
-  generate-changelog:
-    name: Generate Changelog
-    runs-on: ubuntu-latest
-    outputs:
-      changelog: ${{ steps.changelog.outputs.changelog }}
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: Get previous tag
-        id: prev_tag
-        run: |
-          CURRENT_TAG="${{ github.ref_name }}"
-          # Get all tags sorted by version, find the one before current
-          PREVIOUS_TAG=$(git tag -l 'v*' | sort -V | grep -B1 "^${CURRENT_TAG}$" | head -1)
-          if [ "$PREVIOUS_TAG" = "$CURRENT_TAG" ] || [ -z "$PREVIOUS_TAG" ]; then
-            PREVIOUS_TAG=""
-          fi
-          echo "current_tag=${CURRENT_TAG}" >> $GITHUB_OUTPUT
-          echo "previous_tag=${PREVIOUS_TAG}" >> $GITHUB_OUTPUT
-          echo "Current tag: ${CURRENT_TAG}"
-          echo "Previous tag: ${PREVIOUS_TAG:-none}"
-
-      - name: Generate changelog
-        id: changelog
-        run: |
-          CURRENT_TAG="${{ steps.prev_tag.outputs.current_tag }}"
-          PREVIOUS_TAG="${{ steps.prev_tag.outputs.previous_tag }}"
-
-          echo "# What's Changed" > changelog.md
-          echo "" >> changelog.md
-
-          if [ -n "$PREVIOUS_TAG" ]; then
-            echo "Commits since ${PREVIOUS_TAG}:" >> changelog.md
-            echo "" >> changelog.md
-            git log ${PREVIOUS_TAG}..${CURRENT_TAG} --pretty=format:"- %s (%h)" --no-merges >> changelog.md
-          else
-            echo "Initial release" >> changelog.md
-            echo "" >> changelog.md
-            git log ${CURRENT_TAG} --pretty=format:"- %s (%h)" --no-merges >> changelog.md
-          fi
-
-          echo "" >> changelog.md
-          echo "" >> changelog.md
-          echo "**Full Changelog**: https://github.com/${{ github.repository }}/compare/${PREVIOUS_TAG}...${CURRENT_TAG}" >> changelog.md
-
-          cat changelog.md
-
-      - name: Upload changelog artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: changelog
-          path: changelog.md
-          retention-days: 1
-
   create-release:
     name: Create GitHub Release
-    needs: [build-macos, generate-changelog]
+    needs: [build-macos]
     runs-on: ubuntu-latest
     if: startsWith(github.ref, 'refs/tags/v')
 
@@ -142,7 +84,7 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           gh release create "${{ github.ref_name }}" \
-            release-artifacts/alpaca-macos-zip/*.zip \
+            release-artifacts/alpaca-macos-zip/**/*.zip \
             --title "Alpaca Desktop ${{ github.ref_name }}" \
-            --notes-file release-artifacts/changelog/changelog.md \
+            --generate-notes \
             --draft
