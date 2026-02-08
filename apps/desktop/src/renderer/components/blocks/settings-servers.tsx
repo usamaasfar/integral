@@ -1,12 +1,7 @@
 import { memo } from "react";
 
 import { SettingsRemoteServers } from "~/renderer/components/blocks/settings-servers-remote";
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from "~/renderer/components/ui/tabs";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "~/renderer/components/ui/tabs";
 
 export const SettingsServers = memo(() => {
   return (
