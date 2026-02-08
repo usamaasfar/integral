@@ -11,7 +11,7 @@ import {
   X,
 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
-import { Controller, useForm } from "react-hook-form";
+import { Controller, useForm, useWatch } from "react-hook-form";
 import * as z from "zod";
 
 import {
@@ -58,6 +58,8 @@ export const SettingsRemoteServers = () => {
   const formRef = useRef(form);
   formRef.current = form;
 
+  const term = useWatch({ control: form.control, name: "term" });
+
   useEffect(() => {
     const subscription = formRef.current.watch((value) => {
       if (value.term) searchServers(value.term);
@@ -93,7 +95,7 @@ export const SettingsRemoteServers = () => {
                 render={({ field }) => (
                   <InputGroup>
                     <InputGroupAddon>
-                      {isSearchingServers && form.watch("term") ? (
+                      {isSearchingServers && term ? (
                         <LoaderCircle className="h-4 w-4 animate-spin" />
                       ) : (
                         <Search className="h-4 w-4" />
@@ -121,7 +123,7 @@ export const SettingsRemoteServers = () => {
             </FieldGroup>
           </form>
           <div className="mt-4">
-            {form.watch("term") ? <SearchServers /> : <ConnectedServers />}
+            {term ? <SearchServers /> : <ConnectedServers />}
           </div>
         </CardContent>
       </ScrollArea>
