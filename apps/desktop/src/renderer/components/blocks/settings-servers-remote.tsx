@@ -1,7 +1,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { BadgeCheck, CircleCheck, CircleX, ExternalLink, Info, LoaderCircle, Search, Server, X } from "lucide-react";
-import { useEffect, useState } from "react";
-import { Controller, useForm } from "react-hook-form";
+import { useEffect, useRef, useState } from "react";
+import { Controller, useForm, useWatch } from "react-hook-form";
 import * as z from "zod";
 
 import { Avatar, AvatarFallback, AvatarImage } from "~/renderer/components/ui/avatar";
@@ -27,14 +27,21 @@ const formSchema = z.object({ term: z.string() });
 export const SettingsRemoteServers = () => {
   const { isSearchingServers, searchServers, completeOAuthFlow } = useServersStore();
 
-  const form = useForm<z.infer<typeof formSchema>>({ resolver: zodResolver(formSchema), defaultValues: { term: "" } });
+  const form = useForm<z.infer<typeof formSchema>>({
+    resolver: zodResolver(formSchema),
+    defaultValues: { term: "" },
+  });
+  const formRef = useRef(form);
+  formRef.current = form;
+
+  const term = useWatch({ control: form.control, name: "term" });
 
   useEffect(() => {
-    const subscription = form.watch((value) => {
+    const subscription = formRef.current.watch((value) => {
       if (value.term) searchServers(value.term);
     });
     return () => subscription.unsubscribe();
-  }, [form, searchServers]);
+  }, [searchServers]);
 
   useEffect(() => {
     const handleOAuthCallback = async (data: { code: string; state: string }) => {
@@ -61,11 +68,7 @@ export const SettingsRemoteServers = () => {
                 render={({ field }) => (
                   <InputGroup>
                     <InputGroupAddon>
-                      {isSearchingServers && form.watch("term") ? (
-                        <LoaderCircle className="h-4 w-4 animate-spin" />
-                      ) : (
-                        <Search className="h-4 w-4" />
-                      )}
+                      {isSearchingServers && term ? <LoaderCircle className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}
                     </InputGroupAddon>
                     <InputGroupInput {...field} placeholder="Search MCP servers..." />
                     {field.value && (
@@ -80,7 +83,7 @@ export const SettingsRemoteServers = () => {
               />
             </FieldGroup>
           </form>
-          <div className="mt-4">{form.watch("term") ? <SearchServers /> : <ConnectedServers />}</div>
+          <div className="mt-4">{term ? <SearchServers /> : <ConnectedServers />}</div>
         </CardContent>
       </ScrollArea>
     </Card>
