@@ -10,7 +10,7 @@ import {
   Server,
   X,
 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import * as z from "zod";
 
@@ -55,13 +55,14 @@ export const SettingsRemoteServers = () => {
     resolver: zodResolver(formSchema),
     defaultValues: { term: "" },
   });
+  const formRef = useRef(form);
+  formRef.current = form;
 
   useEffect(() => {
-    const subscription = form.watch((value) => {
+    const subscription = formRef.current.watch((value) => {
       if (value.term) searchServers(value.term);
     });
     return () => subscription.unsubscribe();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchServers]);
 
   useEffect(() => {

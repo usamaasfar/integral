@@ -1,6 +1,6 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Loader } from "lucide-react";
-import { memo, useEffect } from "react";
+import { memo, useEffect, useRef } from "react";
 import { Controller, useForm } from "react-hook-form";
 import * as z from "zod";
 
@@ -41,14 +41,15 @@ export const SettingsGeneral = memo(() => {
     resolver: zodResolver(formSchema),
     defaultValues: { username: "", customInstructions: "" },
   });
+  const formRef = useRef(form);
+  formRef.current = form;
 
   useEffect(() => {
     getGeneralSettings();
   }, [getGeneralSettings]);
 
   useEffect(() => {
-    form.reset({ username, customInstructions });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    formRef.current.reset({ username, customInstructions });
   }, [username, customInstructions]);
 
   const onSubmit = async (data: z.infer<typeof formSchema>) => {
